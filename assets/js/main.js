@@ -71,9 +71,11 @@ function buildButtons() {
   });
 }
 
-/* health benefits: build the expanding hover card for every tile.
+/* health benefits: expanding hover card, built as two halves that unfold
+   from the middle crease like folded cardboard.
    NOTE: per-benefit imagery + copy pending — sharp-memory image and the
-   designed sentence are used as placeholders for all tiles for now. */
+   designed sentence are shared by all tiles for now (Ergun 2026-08-06). */
+const BENEFIT_IMG = "assets/img/benefit-sharp-memory.png";
 const BENEFIT_DESC =
   "Once you understand what’s happening in your sleep, the next step is choosing the treatment.";
 
@@ -84,128 +86,154 @@ function buildBenefitCards() {
     card.className = "benefit-card";
     card.setAttribute("aria-hidden", "true");
     card.innerHTML =
-      '<div class="benefit-card-media"><img src="assets/img/benefit-sharp-memory.png" alt=""></div>' +
-      '<span class="benefit-label">' + label + "</span>" +
-      '<span class="benefit-card-desc">' + BENEFIT_DESC + "</span>";
+      '<div class="benefit-card-half benefit-card-upper" style="background-image:url(' + BENEFIT_IMG + ')">' +
+      '<span class="benefit-label">' + label + "</span></div>" +
+      '<div class="benefit-card-half benefit-card-lower" style="background-image:url(' + BENEFIT_IMG + ')">' +
+      '<span class="benefit-card-desc">' + BENEFIT_DESC + "</span></div>";
     tile.appendChild(card);
   });
 }
 
-/* ============================================================
-   Animations — one named function per behaviour
-   ============================================================ */
-
-/* backdrop arcs open from a single line (hero on load, sections on scroll) */
-function animateArcOpen(el, trigger) {
-  gsap.set(el, { scaleY: 0.015, opacity: 0, transformOrigin: "50% 50%" });
-  const tween = {
-    scaleY: 1,
-    opacity: 1,
-    duration: 1.8,
-    ease: "power3.inOut",
-  };
-  if (trigger) {
-    tween.scrollTrigger = { trigger, start: "top 85%", once: true };
-    gsap.to(el, tween);
-  } else {
-    return gsap.to(el, tween); // hero: caller places it on the intro timeline
-  }
-}
-
-/* split a heading into masked lines and wipe them up */
-function wipeUpLines(el, opts = {}) {
-  const split = SplitText.create(el, { type: "lines", mask: "lines", autoSplit: true });
-  return gsap.from(split.lines, {
-    yPercent: 110,
-    duration: 0.9,
-    stagger: 0.09,
-    ease: "power3.out",
-    ...opts,
+/* stats: wrap the leading number of each value so it can count up */
+function buildStatCounters() {
+  document.querySelectorAll(".stat-value").forEach((el) => {
+    const m = el.textContent.match(/^(\d+)(.*)$/);
+    if (!m) return;
+    el.innerHTML = '<span class="stat-num" data-target="' + m[1] + '">' + m[1] + "</span>" + m[2];
   });
 }
 
-/* hero intro: arcs open + title wipes + the rest fades in */
-function heroIntro() {
-  const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-  tl.add(animateArcOpen(".hero-backdrop-arcs", null), 0);
-  tl.add(wipeUpLines(".hero-title"), 0.35);
-  tl.from(".hero-subtitle", { opacity: 0, y: 18, duration: 0.8 }, 0.7);
-  tl.from(".hero-actions > *", { opacity: 0, y: 14, duration: 0.6, stagger: 0.07 }, 0.85);
-  tl.from(".nav > *", { opacity: 0, y: -10, duration: 0.6, stagger: 0.08 }, 0.5);
-  tl.from(".announcement-container > *", { opacity: 0, duration: 0.6 }, 0.6);
+/* ============================================================
+   Backdrop arcs — light beams opening from a squished line
+   Each colored vector animates individually: the main + mid beams
+   start as a line on the section boundary and open; the small light
+   vectors stay hidden, then reveal and find their place.
+   ============================================================ */
+const ARC_ORIGIN = "922.105 578.655"; // the beams' shared midline in svg coords
+
+function arcTimeline(svgSel) {
+  const svg = document.querySelector(svgSel);
+  if (!svg) return null;
+  const main = svg.querySelector(".arc-beam-main");
+  const mid = svg.querySelector(".arc-beam-mid");
+  const accents = svg.querySelectorAll(".arc-accent");
+  gsap.set([main, mid], { svgOrigin: ARC_ORIGIN, scaleY: 0.012 });
+  if (accents.length) gsap.set(accents, { svgOrigin: ARC_ORIGIN, scaleY: 0.08, autoAlpha: 0 });
+  gsap.set(svg, { visibility: "visible" }); // squished state ready — safe to show
+  const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.inOut" } });
+  tl.to(main, { scaleY: 1, duration: 2.4 }, 0)
+    .to(mid, { scaleY: 1, duration: 2.4 }, 0.2);
+  if (accents.length) {
+    tl.to(accents, { scaleY: 1, autoAlpha: 1, duration: 1.8, ease: "power3.out", stagger: 0.18 }, 1.15);
+  }
   return tl;
 }
 
-/* generic scroll-in treatments: headings wipe, captions fade */
-function sectionTextReveals() {
+function scrollArc(svgSel, clipSel) {
+  const tl = arcTimeline(svgSel);
+  if (!tl) return;
+  ScrollTrigger.create({
+    trigger: clipSel,
+    start: "top 88%",
+    once: true,
+    onEnter: () => tl.play(),
+  });
+}
+
+/* ============================================================
+   Reveal system — everything is pre-hidden at init, plays on enter
+   ============================================================ */
+const wipeTargets = [];
+
+function prepReveals() {
   document.querySelectorAll("[data-wipe]").forEach((el) => {
+    const split = SplitText.create(el, { type: "lines", mask: "lines", autoSplit: true });
+    gsap.set(split.lines, { yPercent: 110 });
+    wipeTargets.push({ el, split });
     ScrollTrigger.create({
       trigger: el,
-      start: "top 85%",
+      start: "top 92%",
       once: true,
-      onEnter: () => wipeUpLines(el),
+      onEnter: () =>
+        gsap.to(split.lines, { yPercent: 0, duration: 0.9, stagger: 0.09, ease: "power3.out" }),
     });
   });
   document.querySelectorAll("[data-fade]").forEach((el) => {
-    gsap.from(el, {
-      opacity: 0,
-      y: 16,
-      duration: 0.8,
-      ease: "power2.out",
-      scrollTrigger: { trigger: el, start: "top 88%", once: true },
+    gsap.set(el, { autoAlpha: 0, y: 16 });
+    ScrollTrigger.create({
+      trigger: el,
+      start: "top 94%",
+      once: true,
+      onEnter: () => gsap.to(el, { autoAlpha: 1, y: 0, duration: 0.8, ease: "power2.out" }),
     });
   });
 }
 
-/* stats: bars rise from below, one by one, right to left */
-function statsBarsRise() {
-  gsap.from(".stat-line-inner", {
-    scaleY: 0,
-    transformOrigin: "50% 100%",
-    duration: 1.1,
-    ease: "power3.out",
-    stagger: { each: 0.14, from: "end" },
-    scrollTrigger: { trigger: ".stats-columns", start: "top 75%", once: true },
+/* hero intro: beams open from the line + title wipes + the rest fades in */
+function heroIntro() {
+  const arcs = arcTimeline(".hero-arcs-svg");
+  const split = SplitText.create(".hero-title", { type: "lines", mask: "lines", autoSplit: true });
+  gsap.set(split.lines, { yPercent: 110 });
+  const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+  if (arcs) tl.add(arcs.play(), 0);
+  tl.to(split.lines, { yPercent: 0, duration: 0.9, stagger: 0.09 }, 0.35);
+  tl.from(".hero-subtitle", { autoAlpha: 0, y: 18, duration: 0.8 }, 0.7);
+  tl.from(".hero-actions > *", { autoAlpha: 0, y: 14, duration: 0.6, stagger: 0.07 }, 0.85);
+  tl.from(".nav > *", { autoAlpha: 0, y: -10, duration: 0.6, stagger: 0.08 }, 0.5);
+  tl.from(".announcement-container > *", { autoAlpha: 0, duration: 0.6 }, 0.6);
+  return tl;
+}
+
+/* stats: slow right-to-left build — each bar rises while its number counts up */
+function statsSequence() {
+  const cols = gsap.utils.toArray(".stats-col").reverse(); // right to left
+  cols.forEach((col) => {
+    gsap.set(col.querySelector(".stat-line-inner"), { scaleY: 0, transformOrigin: "50% 100%" });
+    gsap.set(col.querySelector(".stat-block"), { autoAlpha: 0, y: 14 });
   });
-  gsap.from(".stats-col .stat-block", {
-    opacity: 0,
-    y: 14,
-    duration: 0.7,
-    ease: "power2.out",
-    stagger: { each: 0.14, from: "end" },
-    scrollTrigger: { trigger: ".stats-columns", start: "top 75%", once: true },
+  const tl = gsap.timeline({
+    scrollTrigger: { trigger: ".stats-columns", start: "top 78%", once: true },
+  });
+  cols.forEach((col, i) => {
+    const bar = col.querySelector(".stat-line-inner");
+    const block = col.querySelector(".stat-block");
+    const num = col.querySelector(".stat-num");
+    const at = i * 0.55;
+    tl.to(bar, { scaleY: 1, duration: 2.6, ease: "power2.inOut" }, at);
+    tl.to(block, { autoAlpha: 1, y: 0, duration: 0.9, ease: "power2.out" }, at + 0.2);
+    if (num) {
+      tl.fromTo(num, { innerText: 0 },
+        { innerText: +num.dataset.target, duration: 2.6, snap: { innerText: 1 }, ease: "power2.inOut" }, at);
+    }
   });
 }
 
 /* symptoms cards entrance */
 function symptomCardsIn() {
-  gsap.from(".symptom-card-slot", {
-    opacity: 0,
-    y: 30,
-    duration: 0.9,
-    ease: "power3.out",
-    stagger: 0.1,
-    scrollTrigger: { trigger: ".symptoms-cards", start: "top 82%", once: true },
+  const slots = gsap.utils.toArray(".symptom-card-slot");
+  gsap.set(slots, { autoAlpha: 0, y: 30 });
+  ScrollTrigger.create({
+    trigger: ".symptoms-cards",
+    start: "top 88%",
+    once: true,
+    onEnter: () => gsap.to(slots, { autoAlpha: 1, y: 0, duration: 0.9, ease: "power3.out", stagger: 0.1 }),
   });
 }
 
 /* night data viz: bars grow up quickly, chips pop in */
 function nightVizIn() {
-  gsap.from(".wave-bar", {
-    scaleY: 0,
-    transformOrigin: "50% 100%",
-    duration: 0.5,
-    ease: "power2.out",
-    stagger: { each: 0.006, from: "start" },
-    scrollTrigger: { trigger: ".night-data-viz", start: "top 80%", once: true },
-  });
-  gsap.from(".glass-stat-card, .event-chip, .chip-connector", {
-    opacity: 0,
-    y: 12,
-    duration: 0.6,
-    ease: "power2.out",
-    stagger: 0.1,
-    scrollTrigger: { trigger: ".night-data-viz", start: "top 70%", once: true },
+  const bars = () => gsap.utils.toArray(".wave-bar");
+  gsap.set(bars(), { scaleY: 0, transformOrigin: "50% 100%" });
+  const chips = gsap.utils.toArray(".glass-stat-card, .event-chip, .chip-connector");
+  gsap.set(chips, { autoAlpha: 0, y: 12 });
+  ScrollTrigger.create({
+    trigger: ".night-data-viz",
+    start: "top 85%",
+    once: true,
+    onEnter: () => {
+      gsap.to(bars(), { scaleY: 1, duration: 0.5, ease: "power2.out", stagger: { each: 0.006 } });
+      gsap.to(chips, { autoAlpha: 1, y: 0, duration: 0.6, ease: "power2.out", stagger: 0.1, delay: 0.35 });
+    },
   });
 }
 
@@ -227,19 +255,28 @@ function testimonialsParallax() {
   });
 }
 
-/* benefits: snappy expanding hover cards */
+/* benefits: card unfolds from the middle crease like folded cardboard —
+   lower half rises, upper half unfolds upward; falls back in on unhover */
 function benefitHovers() {
   document.querySelectorAll(".benefit-tile").forEach((tile) => {
     const card = tile.querySelector(".benefit-card");
     if (!card) return;
-    gsap.set(card, { left: 0, top: "50%", yPercent: -50, scale: 0.6, opacity: 0, transformOrigin: "0% 50%" });
-    const open = gsap.timeline({ paused: true })
-      .to(card, { opacity: 1, scale: 1, duration: 0.28, ease: "power3.out" }, 0)
-      .to(tile, { zIndex: 6, duration: 0 }, 0);
-    tile.addEventListener("mouseenter", () => { tile.style.zIndex = 6; open.timeScale(1).play(); });
+    const upper = card.querySelector(".benefit-card-upper");
+    const lower = card.querySelector(".benefit-card-lower");
+    gsap.set(card, { autoAlpha: 0 });
+    gsap.set(upper, { rotateX: -140, transformOrigin: "50% 100%", transformPerspective: 900 });
+    gsap.set(lower, { scaleY: 0.35, transformOrigin: "50% 100%" });
+    const tl = gsap.timeline({ paused: true })
+      .to(card, { autoAlpha: 1, duration: 0.14, ease: "none" }, 0)
+      .to(lower, { scaleY: 1, duration: 0.35, ease: "power3.out" }, 0)
+      .to(upper, { rotateX: 0, duration: 0.45, ease: "power3.out" }, 0.08);
+    tile.addEventListener("mouseenter", () => {
+      tile.style.zIndex = 7;
+      tl.timeScale(1).play();
+    });
     tile.addEventListener("mouseleave", () => {
-      open.timeScale(1.6).reverse();
-      open.eventCallback("onReverseComplete", () => (tile.style.zIndex = ""));
+      tl.timeScale(1.45).reverse();
+      tl.eventCallback("onReverseComplete", () => (tile.style.zIndex = ""));
     });
   });
 }
@@ -253,7 +290,6 @@ function faqAccordion() {
     const inner = item.querySelector(".faq-answer-inner");
     head.addEventListener("click", () => {
       const isOpen = item.classList.contains("is-open");
-      // close everything else first
       items.forEach((other) => {
         if (other !== item && other.classList.contains("is-open")) {
           other.classList.remove("is-open");
@@ -288,14 +324,14 @@ function faqAccordion() {
 
 /* footer: quick staggered reveal — never make the user wait */
 function footerReveal() {
-  animateArcOpen(".footer-arcs", ".footer");
-  gsap.from(".footer-container > *", {
-    opacity: 0,
-    y: 16,
-    duration: 0.55,
-    ease: "power2.out",
-    stagger: 0.06,
-    scrollTrigger: { trigger: ".footer", start: "top 80%", once: true },
+  scrollArc(".footer-arc-clip .section-arcs-svg", ".footer-arc-clip");
+  const rows = gsap.utils.toArray(".footer-container > *");
+  gsap.set(rows, { autoAlpha: 0, y: 16 });
+  ScrollTrigger.create({
+    trigger: ".footer",
+    start: "top 85%",
+    once: true,
+    onEnter: () => gsap.to(rows, { autoAlpha: 1, y: 0, duration: 0.55, ease: "power2.out", stagger: 0.06 }),
   });
 }
 
@@ -305,16 +341,19 @@ function footerReveal() {
 buildWaveform();
 buildButtons();
 buildBenefitCards();
+buildStatCounters();
 
 document.fonts.ready.then(() => {
   if (reducedMotion) {
+    gsap.set(".backdrop-arcs", { visibility: "visible" });
     faqAccordion();
-    return; // no motion beyond the accordion's accessibility behaviour
+    benefitHovers();
+    return; // no motion beyond hover/accordion behaviour
   }
   heroIntro();
-  animateArcOpen(".symptoms-arcs", ".how-it-works-content");
-  sectionTextReveals();
-  statsBarsRise();
+  scrollArc(".symptoms-arc-clip .section-arcs-svg", ".symptoms-arc-clip");
+  prepReveals();
+  statsSequence();
   symptomCardsIn();
   nightVizIn();
   testimonialsParallax();
