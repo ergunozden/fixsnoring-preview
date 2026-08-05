@@ -108,10 +108,45 @@ i { font-style: normal; }
   isolation: isolate;
 }
 .btn .btn-label { position: relative; z-index: 2; display: inline-block; }
-.btn-primary { background: var(--c-orange); }
-.btn-glass { background: rgba(255, 255, 255, 0.12); }
+.btn-primary { background: var(--c-orange); --fill-color: var(--c-dark); --fill-text: #fff; }
+.btn-glass { background: rgba(255, 255, 255, 0.12); --fill-color: var(--c-orange); --fill-text: #fff; }
 .btn-icon { width: 40px; padding: 0; }
 .btn-icon img { position: relative; z-index: 2; }
+
+/* playful CTA hover: label slides up + circle fill grows from bottom center.
+   Tune per variant via --fill-color / --fill-text. JS sizes --fill-d. */
+.btn { transition: color 0.3s cubic-bezier(0.33, 1, 0.68, 1); }
+.btn:hover { color: var(--fill-text, currentColor); }
+.btn-fill {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: 0;
+  width: var(--fill-d, 300px);
+  height: var(--fill-d, 300px);
+  border-radius: 50%;
+  background: var(--fill-color, var(--c-orange));
+  transform: translate(-50%, 50%) scale(0);
+  transition: transform 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+  pointer-events: none;
+}
+.btn:hover .btn-fill { transform: translate(-50%, 50%) scale(1); }
+.btn-label-wrap {
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  overflow: clip;
+}
+.btn-label-wrap .btn-label {
+  display: block;
+  transition: transform 0.45s cubic-bezier(0.76, 0, 0.24, 1);
+}
+.btn-label-wrap .btn-label-clone {
+  position: absolute;
+  left: 0;
+  top: 100%;
+}
+.btn:hover .btn-label-wrap .btn-label { transform: translateY(-100%); }
 
 /* ---------- grid lines (the 1200 / 8-track column system) ----------
    9 lines: container edges at 50px + every 137.5px. Drawn as 1px white,
@@ -245,9 +280,9 @@ i { font-style: normal; }
 .hero-backdrop-arcs {
   position: absolute;
   top: 501.35px;
-  left: calc(50% - 821.61px);   /* exact Figma placement at 1512 */
-  width: 2052.21px;
-  height: 957.31px;
+  left: -4.34vw;          /* Figma: -65.62 at 1512 — scales with viewport */
+  width: 135.728vw;       /* Figma: 2052.21 at 1512 — spans past both edges */
+  height: 957.31px;       /* fixed so the arc midline stays on the hero's bottom edge */
   pointer-events: none;
 }
 .hero-backdrop-arcs-img {
@@ -406,8 +441,8 @@ i { font-style: normal; }
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  width: 1644.21px;
-  height: 957.31px;
+  width: 108.744vw;       /* Figma: 1644.21 at 1512 — spans both edges at any width */
+  height: 957.31px;       /* fixed so the arc midline stays on the section boundary */
   pointer-events: none;
 }
 .section-backdrop-arcs img {
@@ -543,8 +578,9 @@ i { font-style: normal; }
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: rgba(2, 24, 25, 0.35);
+  background: rgba(0, 0, 0, 0.32);
 }
+.home-test-cta .video-cta-overlay { background: none; }
 .video-cta-inner {
   position: relative;
   z-index: 2;
@@ -1385,10 +1421,16 @@ i { font-style: normal; }
 .announcement-link { transition: opacity 0.25s ease; }
 .learn-more-link:hover { opacity: 0.85; }
 
-/* ---------- grain overlay ---------- */
+/* ---------- grain overlay ----------
+   Figma: tiled noise image, node opacity .32, blend linear-burn.
+   CSS has no linear-burn; multiply is the closest visual match. */
 .grain-overlay {
   position: absolute;
   inset: 0;
   z-index: 999;
   pointer-events: none;
+  background-image: url("../img/grain.jpg");
+  background-repeat: repeat;
+  opacity: 0.32;
+  mix-blend-mode: multiply;
 }
