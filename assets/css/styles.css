@@ -575,13 +575,16 @@ i { font-style: normal; }
   object-fit: cover;
   z-index: 0;
 }
+/* Figma: sleep-test video carries a 32% black overlay, home-test none.
+   The current interim export has the overlay BAKED IN, so the CSS overlay is
+   off; when full-length source videos land, restore rgba(0,0,0,0.32) on
+   .sleep-test-cta .video-cta-overlay. */
 .video-cta-overlay {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: rgba(0, 0, 0, 0.32);
+  background: none;
 }
-.home-test-cta .video-cta-overlay { background: none; }
 .video-cta-inner {
   position: relative;
   z-index: 2;
