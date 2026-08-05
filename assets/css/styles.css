@@ -182,8 +182,9 @@ i { font-style: normal; }
    Complements the backdrop arc curvature. */
 .grid-fade-mask {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  /* no transform here: a transform would isolate the child's
+     mix-blend-mode: difference and make the lines invisible */
+  left: max(0px, calc(50% - 600px));
   width: min(var(--grid-max), 100%);
   height: 192.15px;
   pointer-events: none;
@@ -198,7 +199,10 @@ i { font-style: normal; }
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
 }
-.grid-fade-mask-flipped { transform: translateX(-50%) scaleY(-1); }
+.grid-fade-mask-flipped .grid-lines {
+  -webkit-mask-image: url("../svg/grid-fade-ellipse-flipped.svg");
+  mask-image: url("../svg/grid-fade-ellipse-flipped.svg");
+}
 
 /* ---------- section spacer ---------- */
 .section-spacer { height: 220px; }
@@ -302,7 +306,7 @@ i { font-style: normal; }
    their light accents land at the page edges, symmetric U at any screen size
    (the 12.164vw extra is the gaussian blur bleed baked into the svg canvas) */
 .hero-arcs-svg,
-.section-arcs-svg { left: -6.082vw; width: 112.164vw; }
+.section-arcs-svg { left: -18.59vw; width: 137.24vw; }
 .nav {
   position: absolute;
   z-index: 10;
@@ -420,7 +424,9 @@ i { font-style: normal; }
 .stat-line-track { width: 100%; }
 .stat-line-inner {
   position: relative;
-  height: var(--bar-h);
+  height: calc(var(--bar-h) + 1.5px); /* overlaps the section boundary so no
+                                         subpixel white seam shows while growing */
+  margin-bottom: -1.5px;
   background: linear-gradient(to bottom, var(--c-orange), var(--c-dark));
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px 0 0 0;
@@ -1233,7 +1239,6 @@ i { font-style: normal; }
   position: relative;
   width: 20px;
   height: 20px;
-  transition: transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 .icon-plus .icon-bar-h {
   position: absolute;
@@ -1251,7 +1256,11 @@ i { font-style: normal; }
   height: 16px;
   background: var(--c-orange);
 }
-.faq-item.is-open .icon-plus { transform: rotate(45deg); }
+.icon-plus .icon-bar-v {
+  transition: transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transform-origin: 50% 50%;
+}
+.faq-item.is-open .icon-plus .icon-bar-v { transform: rotate(90deg); }
 
 /* ---------- footer ---------- */
 .footer {

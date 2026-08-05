@@ -184,26 +184,31 @@ function heroIntro() {
   return tl;
 }
 
-/* stats: slow right-to-left build — each bar rises while its number counts up */
+/* stats: slow right-to-left build. Bars start at the corner-curve height (so
+   the curves never float over nothing), text blocks RIDE the bar tops instead
+   of fading, and the orange numbers count up — all on the same spring. */
 function statsSequence() {
   const cols = gsap.utils.toArray(".stats-col").reverse(); // right to left
+  const MIN_H = 56; // corner curve (50px) + 6
   cols.forEach((col) => {
-    gsap.set(col.querySelector(".stat-line-inner"), { scaleY: 0, transformOrigin: "50% 100%" });
-    gsap.set(col.querySelector(".stat-block"), { autoAlpha: 0, y: 14 });
+    const bar = col.querySelector(".stat-line-inner");
+    const s0 = Math.min(MIN_H / bar.offsetHeight, 1);
+    gsap.set(bar, { scaleY: s0, transformOrigin: "50% 100%" });
+    gsap.set(col.querySelector(".stat-block"), { y: bar.offsetHeight * (1 - s0) });
   });
   const tl = gsap.timeline({
-    scrollTrigger: { trigger: ".stats-columns", start: "top 78%", once: true },
+    scrollTrigger: { trigger: ".stats-columns", start: "top 88%", once: true },
   });
   cols.forEach((col, i) => {
     const bar = col.querySelector(".stat-line-inner");
     const block = col.querySelector(".stat-block");
     const num = col.querySelector(".stat-num");
-    const at = i * 0.55;
-    tl.to(bar, { scaleY: 1, duration: 2.6, ease: "power2.inOut" }, at);
-    tl.to(block, { autoAlpha: 1, y: 0, duration: 0.9, ease: "power2.out" }, at + 0.2);
+    const at = i * 0.32; // tighter stagger so fast scrollers aren't left waiting
+    tl.to(bar, { scaleY: 1, duration: 1.9, ease: "back.out(1.15)" }, at);   // springy settle
+    tl.to(block, { y: 0, duration: 1.9, ease: "back.out(1.15)" }, at);      // rides the bar top
     if (num) {
       tl.fromTo(num, { innerText: 0 },
-        { innerText: +num.dataset.target, duration: 2.6, snap: { innerText: 1 }, ease: "power2.inOut" }, at);
+        { innerText: +num.dataset.target, duration: 1.9, snap: { innerText: 1 }, ease: "power2.out" }, at);
     }
   });
 }
@@ -237,11 +242,13 @@ function nightVizIn() {
   });
 }
 
-/* testimonials: cards drift at different speeds over the sticky title */
-const TESTIMONIAL_SPEEDS = [40, 110, 60, 130]; // px of extra upward drift per card
+/* testimonials: the two columns drift at different speeds over the sticky
+   title — left column slower, right column faster */
+const TESTIMONIAL_COL_SPEEDS = { left: 55, right: 140 }; // px of drift per column
 function testimonialsParallax() {
-  document.querySelectorAll(".testimonial-card").forEach((card, i) => {
-    const drift = TESTIMONIAL_SPEEDS[i % TESTIMONIAL_SPEEDS.length];
+  document.querySelectorAll(".testimonial-card").forEach((card) => {
+    const isLeft = (card.style.gridColumn || "").trim().startsWith("1");
+    const drift = isLeft ? TESTIMONIAL_COL_SPEEDS.left : TESTIMONIAL_COL_SPEEDS.right;
     gsap.fromTo(card, { y: drift }, {
       y: -drift,
       ease: "none",
@@ -255,21 +262,24 @@ function testimonialsParallax() {
   });
 }
 
-/* benefits: card unfolds from the middle crease like folded cardboard —
-   lower half rises, upper half unfolds upward; falls back in on unhover */
+/* benefits: the tile itself morphs into the card — both halves start
+   collapsed onto the tile band (the middle 64px of the card), stay joined at
+   the crease while they grow apart like an envelope opening from the middle,
+   and collapse back into the tile on unhover. No gap, no thin air. */
 function benefitHovers() {
+  const BAND = 0.233; // 32px per half = the 64px tile band
   document.querySelectorAll(".benefit-tile").forEach((tile) => {
     const card = tile.querySelector(".benefit-card");
     if (!card) return;
     const upper = card.querySelector(".benefit-card-upper");
     const lower = card.querySelector(".benefit-card-lower");
     gsap.set(card, { autoAlpha: 0 });
-    gsap.set(upper, { rotateX: -140, transformOrigin: "50% 100%", transformPerspective: 900 });
-    gsap.set(lower, { scaleY: 0.35, transformOrigin: "50% 100%" });
+    gsap.set(upper, { scaleY: BAND, rotateX: -22, transformOrigin: "50% 100%", transformPerspective: 900 });
+    gsap.set(lower, { scaleY: BAND, transformOrigin: "50% 0%" });
     const tl = gsap.timeline({ paused: true })
-      .to(card, { autoAlpha: 1, duration: 0.14, ease: "none" }, 0)
-      .to(lower, { scaleY: 1, duration: 0.35, ease: "power3.out" }, 0)
-      .to(upper, { rotateX: 0, duration: 0.45, ease: "power3.out" }, 0.08);
+      .to(card, { autoAlpha: 1, duration: 0.08, ease: "none" }, 0)
+      .to(upper, { scaleY: 1, rotateX: 0, duration: 0.38, ease: "power3.out" }, 0.02)
+      .to(lower, { scaleY: 1, duration: 0.34, ease: "power3.out" }, 0.02);
     tile.addEventListener("mouseenter", () => {
       tile.style.zIndex = 7;
       tl.timeScale(1).play();
@@ -281,41 +291,42 @@ function benefitHovers() {
   });
 }
 
-/* faq: exclusive accordion, answers open smoothly, lines fade in */
+/* faq: exclusive accordion. Answers are pre-split ONCE so the line-by-line
+   fade never reflows the page; open + close run in one flow with matched
+   easing so the page glides instead of jumping. */
 function faqAccordion() {
   const items = document.querySelectorAll(".faq-item");
   items.forEach((item) => {
+    const inner = item.querySelector(".faq-answer-inner");
+    if (!reducedMotion) {
+      item._split = SplitText.create(inner, { type: "lines", autoSplit: true });
+    }
+  });
+  items.forEach((item) => {
     const head = item.querySelector(".faq-item-head");
     const answer = item.querySelector(".faq-answer");
-    const inner = item.querySelector(".faq-answer-inner");
     head.addEventListener("click", () => {
       const isOpen = item.classList.contains("is-open");
+      const flow = gsap.timeline({ defaults: { duration: 0.5, ease: "power3.inOut" } });
       items.forEach((other) => {
         if (other !== item && other.classList.contains("is-open")) {
           other.classList.remove("is-open");
           other.querySelector(".faq-item-head").setAttribute("aria-expanded", "false");
-          gsap.to(other.querySelector(".faq-answer"), { height: 0, duration: 0.45, ease: "power3.inOut" });
+          flow.to(other.querySelector(".faq-answer"), { height: 0 }, 0);
         }
       });
       if (isOpen) {
         item.classList.remove("is-open");
         head.setAttribute("aria-expanded", "false");
-        gsap.to(answer, { height: 0, duration: 0.45, ease: "power3.inOut" });
+        flow.to(answer, { height: 0 }, 0);
       } else {
         item.classList.add("is-open");
         head.setAttribute("aria-expanded", "true");
-        gsap.to(answer, { height: "auto", duration: 0.55, ease: "power3.inOut" });
-        if (!reducedMotion) {
-          const split = SplitText.create(inner, { type: "lines" });
-          gsap.from(split.lines, {
-            opacity: 0,
-            y: 10,
-            duration: 0.5,
-            stagger: 0.06,
-            delay: 0.12,
-            ease: "power2.out",
-            onComplete: () => split.revert(),
-          });
+        flow.to(answer, { height: "auto" }, 0);
+        if (item._split) {
+          flow.fromTo(item._split.lines,
+            { autoAlpha: 0, y: 10 },
+            { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.06, ease: "power2.out" }, 0.15);
         }
       }
     });
