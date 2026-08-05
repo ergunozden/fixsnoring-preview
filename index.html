@@ -115,7 +115,9 @@
 
   <!-- symptoms (dark band: symptoms + sleep-test-cta + how-it-works) -->
   <section class="symptoms" id="symptoms">
-    <div class="section-backdrop-arcs symptoms-arcs" aria-hidden="true"></div>
+    <div class="section-backdrop-arcs symptoms-arcs" aria-hidden="true">
+      <img src="assets/svg/section-backdrop-arcs.svg" alt="" draggable="false">
+    </div>
     <div class="grid-fade-mask grid-fade-mask-flipped" aria-hidden="true">
       <div class="grid-lines"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
@@ -172,11 +174,46 @@
       </div>
     </div>
 
-    <!-- sleep-test-cta: filled after fetch -->
-    <div class="sleep-test-cta" id="sleep-test-cta"></div>
+    <!-- sleep-test-cta -->
+    <div class="video-cta sleep-test-cta" id="sleep-test-cta">
+      <video class="video-cta-video" autoplay muted loop playsinline preload="metadata" src="assets/video/sleep-test-cta.mp4"></video>
+      <div class="video-cta-overlay" aria-hidden="true"></div>
+      <div class="video-cta-inner">
+        <h2 class="video-cta-title">Take our <em>easy</em><br>at-home sleep test.</h2>
+        <a class="btn btn-light" href="#"><span class="btn-label">Learn more</span></a>
+      </div>
+    </div>
 
-    <!-- how-it-works: filled after fetch -->
-    <div class="how-it-works-content" id="how-it-works"></div>
+    <!-- how-it-works -->
+    <div class="how-it-works-content" id="how-it-works">
+      <div class="how-it-works-header">
+        <h2 class="how-it-works-title">One night, <span class="accent">a full picture.</span></h2>
+        <p class="how-it-works-caption">The at-home test listens all night. This is what it hears.</p>
+      </div>
+      <div class="night-data-viz">
+        <div class="snore-waveform" id="snore-waveform"></div>
+        <div class="wave-baseline" aria-hidden="true"></div>
+        <p class="wave-time" style="left: 0;">10 PM</p>
+        <p class="wave-time" style="left: 275px;">12 AM</p>
+        <p class="wave-time" style="left: 550px;">2 AM</p>
+        <p class="wave-time" style="left: 825px;">4 AM</p>
+        <p class="wave-time" style="left: 1071px;">6 AM</p>
+        <div class="glass-stat-card">
+          <p class="glass-stat-value">6h 52m</p>
+          <p class="glass-stat-label">TIME IN BED</p>
+        </div>
+        <div class="event-chip" style="left: 300px; top: 120px;">
+          <span class="chip-dot" aria-hidden="true"></span>
+          <span class="chip-text">38 snoring events</span>
+        </div>
+        <div class="chip-connector" style="left: 360px; top: 155px; height: 150px;" aria-hidden="true"></div>
+        <div class="event-chip" style="left: 700px; top: 80px;">
+          <span class="chip-dot" aria-hidden="true"></span>
+          <span class="chip-text">Oxygen dip at 2:41 AM</span>
+        </div>
+        <div class="chip-connector" style="left: 780px; top: 115px; height: 190px;" aria-hidden="true"></div>
+      </div>
+    </div>
   </section>
 
   <!-- reversed grid-fade-mask after dark band -->

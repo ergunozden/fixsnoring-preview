@@ -26,6 +26,13 @@
   font-style: normal;
   font-display: swap;
 }
+@font-face {
+  font-family: "PP Neue Montreal";
+  src: url("../fonts/PPNeueMontreal-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
 
 /* ---------- tokens ---------- */
 :root {
@@ -507,6 +514,186 @@ i { font-style: normal; }
 }
 .symptom-card:hover .learn-more-link { color: var(--c-white); }
 .caret-right { transform: rotate(-90deg); }
+
+/* ---------- video CTA tiles (sleep-test-cta / home-test-cta) ---------- */
+.video-cta {
+  position: relative;
+  z-index: 1;
+  width: calc(100% - 32px);
+  max-width: 1480px;
+  height: 980px;
+  margin: 0 auto;
+  border-radius: 8px;
+  overflow: clip;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+}
+.video-cta-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+.video-cta-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(2, 24, 25, 0.35);
+}
+.video-cta-inner {
+  position: relative;
+  z-index: 2;
+  flex: 1 0 0;
+  min-height: 1px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  padding: 60px 50px 50px;
+  text-align: center;
+}
+.video-cta-title {
+  font-weight: 500;
+  font-size: 60px;
+  line-height: 1.02;
+  letter-spacing: -2.4px;
+  color: var(--c-white);
+}
+.video-cta-title em {
+  font-style: italic;
+  font-weight: 400;
+}
+.btn-light { background: var(--c-white); color: var(--c-ink); }
+
+/* ---------- how it works / night data viz ---------- */
+.how-it-works-content {
+  position: relative;
+  z-index: 1;
+  width: min(var(--grid-max), 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 120px;
+  padding: 200px var(--grid-gutter) 160px;
+}
+.how-it-works-header {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  color: var(--c-white);
+}
+.how-it-works-title {
+  font-weight: 500;
+  font-size: 60px;
+  line-height: 1.02;
+  letter-spacing: -2.4px;
+}
+.how-it-works-caption {
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.4;
+  letter-spacing: -0.18px;
+  opacity: 0.68;
+}
+.night-data-viz {
+  position: relative;
+  width: 1100px;
+  max-width: 100%;
+  height: 520px;
+}
+.snore-waveform {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1100px;
+  height: 400px;
+}
+.wave-bar {
+  position: absolute;
+  bottom: 0;
+  width: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  transform-origin: bottom center;
+}
+.wave-bar.is-event { background: var(--c-orange); }
+.wave-baseline {
+  position: absolute;
+  top: 400px;
+  left: 0;
+  width: 1100px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+}
+.wave-time {
+  position: absolute;
+  top: 420px;
+  font-size: 12px;
+  line-height: normal;
+  letter-spacing: 0.48px;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+}
+.glass-stat-card {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 24px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: clip;
+  white-space: nowrap;
+}
+.glass-stat-value {
+  font-weight: 500;
+  font-size: 40px;
+  line-height: normal;
+  letter-spacing: -0.8px;
+  color: var(--c-white);
+}
+.glass-stat-label {
+  font-size: 12px;
+  line-height: normal;
+  letter-spacing: 0.48px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.event-chip {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: clip;
+  white-space: nowrap;
+}
+.chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-orange);
+}
+.chip-text {
+  font-size: 14px;
+  line-height: normal;
+  color: rgba(255, 255, 255, 0.9);
+}
+.chip-connector {
+  position: absolute;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.15);
+}
 
 /* ---------- grain overlay ---------- */
 .grain-overlay {
