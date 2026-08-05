@@ -1,0 +1,11 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="nav-icon-cart" clip-path="url(#clip0_0_9)">
+<path id="icon-shape" d="M8.818 2.969H11.151C11.769 2.969 12.362 3.216 12.8 3.655C13.2379 4.09567 13.4834 4.69178 13.483 5.313V6.875H6.486V5.313C6.486 4.691 6.732 4.095 7.169 3.655C7.38536 3.43771 7.64248 3.26526 7.92562 3.14754C8.20877 3.02982 8.51236 2.96915 8.819 2.969M3.392 6.875H16.608V14.891C16.608 15.458 16.384 16.003 15.984 16.404C15.584 16.806 15.043 17.031 14.478 17.031H5.522C5.24209 17.0306 4.96501 16.975 4.7066 16.8674C4.44819 16.7598 4.21351 16.6023 4.016 16.404C3.61667 16.0017 3.39241 15.4579 3.392 14.891V6.875Z" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+<circle id="ellipse-shape" cx="16.6318" cy="16.6318" r="3.36823" fill="#FF4900"/>
+</g>
+<defs>
+<clipPath id="clip0_0_9">
+<rect width="20" height="20" fill="white"/>
+</clipPath>
+</defs>
+</svg>

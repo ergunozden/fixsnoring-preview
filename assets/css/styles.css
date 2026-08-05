@@ -1,0 +1,517 @@
+/* ============================================================
+   FixSnoring — Website Design 2026
+   Faithful build of Figma file 0VvT7kUzSLB72G99TcC4UK (home, 27:12571)
+   Desktop-first at 1512, fluid via centered 1200 containers.
+   ============================================================ */
+
+/* ---------- fonts ---------- */
+@font-face {
+  font-family: "PP Neue Montreal";
+  src: url("../fonts/PPNeueMontreal-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "PP Neue Montreal";
+  src: url("../fonts/PPNeueMontreal-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "PP Neue Montreal";
+  src: url("../fonts/PPNeueMontreal-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------- tokens ---------- */
+:root {
+  --c-dark: #021819;        /* deep teal ink — dark sections */
+  --c-teal: #074f54;        /* announcement bar */
+  --c-orange: #ff4900;      /* brand accent */
+  --c-ink: #161616;         /* headings on light */
+  --c-page: #ffffff;        /* page background (light sections) */
+  --c-white: #ffffff;
+
+  --grid-max: 1200px;       /* outer container incl. 50px gutters */
+  --grid-gutter: 50px;      /* container padding — content = 1100 */
+  --grid-line: rgba(255, 255, 255, 1); /* lines drawn white, faded via opacity + blend */
+
+  --font-sans: "PP Neue Montreal", "Neue Montreal", -apple-system, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ---------- reset ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: auto; }
+html, body { overflow-x: clip; }
+body {
+  background: var(--c-page);
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+img, svg, video { display: block; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+i { font-style: normal; }
+
+.accent { color: var(--c-orange); }
+
+/* ---------- shared type ---------- */
+.h1 {
+  font-weight: 500;
+  font-size: 80px;
+  line-height: 1.02;
+  letter-spacing: -3.2px;
+}
+.h2, .stats-title, .symptoms-title {
+  font-weight: 500;
+  font-size: 60px;
+  line-height: 1.02;
+  letter-spacing: -2.4px;
+}
+.body-lg, .stats-caption, .symptoms-caption {
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.4;
+  letter-spacing: -0.18px;
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: normal;
+  color: var(--c-white);
+  white-space: nowrap;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn .btn-label { position: relative; z-index: 2; display: inline-block; }
+.btn-primary { background: var(--c-orange); }
+.btn-glass { background: rgba(255, 255, 255, 0.12); }
+.btn-icon { width: 40px; padding: 0; }
+.btn-icon img { position: relative; z-index: 2; }
+
+/* ---------- grid lines (the 1200 / 8-track column system) ----------
+   9 lines: container edges at 50px + every 137.5px. Drawn as 1px white,
+   group opacity .08 + mix-blend difference exactly as in Figma. */
+.grid-lines {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(var(--grid-max), 100%);
+  mix-blend-mode: difference;
+  opacity: 0.08;
+  pointer-events: none;
+}
+.grid-lines i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--grid-line);
+}
+.grid-lines i:nth-child(1) { left: 4.1667%; }
+.grid-lines i:nth-child(2) { left: 15.625%; }
+.grid-lines i:nth-child(3) { left: 27.0833%; }
+.grid-lines i:nth-child(4) { left: 38.5417%; }
+.grid-lines i:nth-child(5) { left: 50%; }
+.grid-lines i:nth-child(6) { left: 61.4583%; }
+.grid-lines i:nth-child(7) { left: 72.9167%; }
+.grid-lines i:nth-child(8) { left: 84.375%; }
+.grid-lines i:nth-child(9) { left: 95.8333%; }
+
+/* grid fade mask — half-ellipse alpha mask over a 192px grid block.
+   Complements the backdrop arc curvature. */
+.grid-fade-mask {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(var(--grid-max), 100%);
+  height: 192.15px;
+  pointer-events: none;
+}
+.grid-fade-mask .grid-lines {
+  top: 0;
+  bottom: 0;
+  -webkit-mask-image: url("../svg/grid-fade-ellipse.svg");
+  mask-image: url("../svg/grid-fade-ellipse.svg");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.grid-fade-mask-flipped { transform: translateX(-50%) scaleY(-1); }
+
+/* ---------- section spacer ---------- */
+.section-spacer { height: 220px; }
+
+/* ---------- announcement bar ---------- */
+.announcement-bar {
+  background: var(--c-teal);
+  display: flex;
+  justify-content: center;
+}
+.announcement-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  width: min(var(--grid-max), 100%);
+  padding: 12px var(--grid-gutter);
+}
+.announcement-container,
+.announcement-container a { color: var(--c-white); }
+.announcement-left, .announcement-right {
+  font-size: 14px;
+  line-height: normal;
+  white-space: nowrap;
+}
+.announcement-right { text-align: right; }
+.announcement-left strong, .announcement-right strong { font-weight: 700; }
+
+/* ---------- hero ---------- */
+.hero {
+  position: relative;
+  background: var(--c-dark);
+  height: 980px;
+}
+.hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  height: 100%;
+  padding: 0 50px 40px;
+  text-align: center;
+  color: var(--c-white);
+}
+.hero-heading-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.hero-title {
+  font-weight: 500;
+  font-size: 80px;
+  line-height: 1.02;
+  letter-spacing: -3.2px;
+  white-space: nowrap;
+}
+.hero-subtitle {
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.4;
+  letter-spacing: 0.18px;
+  opacity: 0.68;
+  max-width: 641px;
+}
+.hero-actions {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* hero backdrop arcs — vertical midline sits exactly on the hero's bottom
+   edge (y 980); overflows into the spacer + stats below. Will be animated
+   opening from a single line (scaleY) on load. */
+.hero-backdrop-arcs {
+  position: absolute;
+  top: 501.35px;
+  left: calc(50% - 821.61px);   /* exact Figma placement at 1512 */
+  width: 2052.21px;
+  height: 957.31px;
+  pointer-events: none;
+}
+.hero-backdrop-arcs-img {
+  position: absolute;
+  inset: -10.45% -6.08%;  /* gaussian blur bleed baked into the SVG */
+  width: 112.16%;
+  height: 120.9%;
+}
+.nav {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(var(--grid-max), 100%);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: end;
+  padding: 28px var(--grid-gutter);
+  color: var(--c-white);
+}
+.nav-left { display: flex; align-items: center; }
+.nav-logo {
+  position: relative;
+  display: block;
+  height: 19px;
+  width: 145px;
+}
+.nav-logo img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 145px;
+  height: auto;
+}
+.nav-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+.nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: normal;
+}
+.nav-item .caret { margin-top: 2px; }
+.nav-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.nav-icon { display: block; width: 20px; height: 20px; }
+.nav-icon img { width: 20px; height: 20px; }
+
+/* ---------- stats ---------- */
+.stats {
+  position: relative;
+  width: min(var(--grid-max), 100%);
+  margin: 0 auto;
+  padding: 200px var(--grid-gutter) 0;
+}
+.stats > .grid-lines { top: 192px; bottom: 0; }
+.stats > .grid-fade-mask { top: 0; }
+.corner-curve {
+  position: absolute;
+  bottom: 0;
+  width: 50px;
+  height: 50px;
+}
+.corner-curve-left { left: 0; }
+.corner-curve-right { right: 0; transform: scaleX(-1); }
+.stats-header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  margin-bottom: -140px;
+}
+.stats-title { color: var(--c-ink); }
+.stats-caption { opacity: 0.68; color: #000; }
+.stats-columns {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: 1131px;
+  overflow: clip;
+}
+.stats-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 60px;
+  min-width: 0;
+}
+.stat-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.stat-label, .stat-desc {
+  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: -0.18px;
+  color: #000;
+  opacity: 0.68;
+}
+.stat-value {
+  font-weight: 500;
+  font-size: 24px;
+  letter-spacing: -0.24px;
+  color: var(--c-orange);
+}
+.stat-line-track { width: 100%; }
+.stat-line-inner {
+  position: relative;
+  height: var(--bar-h);
+  background: linear-gradient(to bottom, var(--c-orange), var(--c-dark));
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px 0 0 0;
+}
+.stat-bar-first { border-left: 1px solid rgba(255, 255, 255, 0.08); }
+.stat-bar-last { border-radius: 8px 8px 0 0; }
+.stat-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 0.5px);
+  width: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- symptoms (dark band) ---------- */
+.symptoms {
+  position: relative;
+  background: var(--c-dark);
+  color: var(--c-white);
+}
+.symptoms-grid-lines { top: 0; bottom: 115.19px; }
+.symptoms > .grid-fade-mask {
+  bottom: 0;
+  height: 115.19px;
+}
+/* section backdrop arcs — midline pinned to a section boundary, same
+   open-from-a-line animation as the hero arcs. */
+.section-backdrop-arcs {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1644.21px;
+  height: 957.31px;
+  pointer-events: none;
+}
+.section-backdrop-arcs img {
+  position: absolute;
+  inset: -10.45% -6.08%;
+  width: 112.16%;
+  height: 120.9%;
+}
+.symptoms-arcs { top: calc(100% - 478.65px); }
+
+.symptoms-content {
+  position: relative;
+  z-index: 1;
+  width: min(var(--grid-max), 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 120px;
+  padding: 200px var(--grid-gutter) 160px;
+}
+.symptoms-header {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+.symptoms-title { color: var(--c-white); }
+.symptoms-title .accent { color: var(--c-orange); }
+.symptoms-caption { opacity: 0.68; }
+
+.symptoms-cards {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+.symptom-card-slot {
+  flex: 1 0 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  padding-right: 20px;
+}
+.symptom-card-slot:nth-child(2) { padding-top: 60px; }
+.symptom-card-slot:nth-child(3) { padding-top: 120px; }
+.symptom-card-slot:nth-child(4) { padding-top: 180px; }
+.symptom-card {
+  flex: 1 0 0;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
+  height: 346px;
+  padding: 20px 40px 20px 0;
+  border-radius: 8px;
+  transition: background-color 0.35s cubic-bezier(0.25, 0.1, 0.25, 1),
+              padding 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.symptom-card:hover {
+  background: var(--c-orange);
+  padding: 20px;
+}
+.card-number-block {
+  width: 100px;
+  height: 100px;
+  overflow: clip;
+}
+.card-number {
+  font-weight: 400;
+  font-size: 80px;
+  line-height: 0.8;
+  letter-spacing: -0.8px;
+  opacity: 0.2;
+  color: var(--c-white);
+  white-space: nowrap;
+}
+.card-quote-block {
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.card-quote {
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 1.28;
+  letter-spacing: -0.24px;
+  text-indent: -0.45em; /* hanging opening quote */
+}
+.card-label {
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: -0.18px;
+  opacity: 0.6;
+}
+.learn-more-link {
+  align-self: end;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--c-orange);
+  transition: color 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.symptom-card:hover .learn-more-link { color: var(--c-white); }
+.caret-right { transform: rotate(-90deg); }
+
+/* ---------- grain overlay ---------- */
+.grain-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+}

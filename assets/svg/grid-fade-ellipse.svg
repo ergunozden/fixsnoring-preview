@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="1200.44" height="192.154" viewBox="0 0 1200.44 192.154" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path id="grid-fade-ellipse" d="M600.185 0C839.094 0 1053.59 74.2947 1200.44 192.154L0 192.094C146.851 74.2695 361.316 0 600.185 0Z" fill="url(#paint0_radial_0_20)"/>
+<defs>
+<radialGradient id="paint0_radial_0_20" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(600.185 192.154) rotate(-90) scale(192.154 600.26)">
+<stop offset="0.600862" stop-color="#D9D9D9"/>
+<stop offset="1" stop-color="#D9D9D9" stop-opacity="0"/>
+</radialGradient>
+</defs>
+</svg>
