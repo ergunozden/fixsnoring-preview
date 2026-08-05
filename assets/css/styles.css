@@ -298,8 +298,11 @@ i { font-style: normal; }
   display: block;
   overflow: visible;
 }
-.hero-arcs-svg { left: -12.595vw; width: 152.239vw; }          /* 2052.21@1512 + blur bleed */
-.section-arcs-svg { left: calc(50% - 60.986vw); width: 121.972vw; } /* 1644.21@1512 + bleed */
+/* the full arc artwork maps to exactly the viewport width — both arms and
+   their light accents land at the page edges, symmetric U at any screen size
+   (the 12.164vw extra is the gaussian blur bleed baked into the svg canvas) */
+.hero-arcs-svg,
+.section-arcs-svg { left: -6.082vw; width: 112.164vw; }
 .nav {
   position: absolute;
   z-index: 10;
