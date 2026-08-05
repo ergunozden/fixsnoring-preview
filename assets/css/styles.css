@@ -565,6 +565,7 @@ i { font-style: normal; }
   align-items: center;
   justify-content: center;
   isolation: isolate;
+  background: var(--c-dark); /* fallback while the video loads / is absent */
 }
 .video-cta-video {
   position: absolute;
@@ -961,6 +962,7 @@ i { font-style: normal; }
   line-height: 1.02;
   letter-spacing: -2.08px;
   color: var(--c-ink);
+  white-space: nowrap;
 }
 .benefits-grid {
   display: grid;
@@ -1420,6 +1422,57 @@ i { font-style: normal; }
 .announcement-link:hover { opacity: 0.85; }
 .announcement-link { transition: opacity 0.25s ease; }
 .learn-more-link:hover { opacity: 0.85; }
+
+/* ---------- responsive fallback (no mobile Figma yet — derived from the grid) ---------- */
+@media (max-width: 1180px) {
+  .hero-title { font-size: 56px; letter-spacing: -2.24px; white-space: normal; }
+  .h2, .stats-title, .symptoms-title, .trust-title, .how-it-works-title,
+  .testimonials-title, .video-cta-title { font-size: 44px; letter-spacing: -1.76px; }
+  .faq-title { font-size: 52px; letter-spacing: -2.08px; white-space: normal; }
+  .benefits-title { font-size: 36px; letter-spacing: -1.44px; white-space: normal; }
+  .tile-heading { font-size: 32px; letter-spacing: -1.28px; }
+  .stats-header { margin-bottom: 0; }
+  .stats-columns { height: auto; grid-template-columns: repeat(2, 1fr); gap: 40px 20px; padding-top: 60px; }
+  .stat-line-inner { height: clamp(120px, calc(var(--bar-h) * 0.45), 500px); border-radius: 8px 8px 0 0; }
+  .symptoms-cards { flex-direction: column; gap: 24px; }
+  .symptom-card-slot { padding: 0 !important; width: 100%; }
+  .symptom-card { height: auto; min-height: 280px; }
+  .nav-menu { display: none; }
+  .announcement-right { display: none; }
+  .announcement-container { grid-template-columns: 1fr; justify-items: center; }
+  .video-cta, .product-tile { height: 640px; }
+  .cta-tiles-row { flex-direction: column; }
+  .trust-pillars { grid-template-columns: 1fr 1fr; grid-template-rows: none; gap: 40px 20px; }
+  .trust-panel { grid-column: 1 / span 2; grid-row: auto; }
+  .trust-pillar { grid-column: auto !important; grid-row: auto !important; }
+  .testimonials-grid { grid-template-columns: 1fr; grid-template-rows: none; height: auto; gap: 24px; }
+  .testimonial-card { grid-column: auto !important; grid-row: auto !important; min-height: 380px; }
+  .benefits { width: 100%; padding: 0 24px 120px; }
+  .benefits-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: none; grid-auto-rows: 64px; }
+  .benefit-tile { grid-column: auto !important; grid-row: auto !important; }
+  .side-fade { display: none; }
+  .night-data-viz { width: 100%; overflow-x: auto; }
+  .faq-num { display: none; }
+  .faq-q-block { grid-column: 1 / span 7; }
+  .footer-columns { flex-wrap: wrap; gap: 40px; }
+  .footer-brand { flex-direction: column; gap: 32px; }
+  .footer-legal { flex-direction: column; gap: 16px; align-items: flex-start; }
+  .footer-legal-links { flex-wrap: wrap; }
+  .grid-lines, .grid-fade-mask { display: none; }
+}
+@media (max-width: 700px) {
+  .hero-title { font-size: 40px; letter-spacing: -1.6px; }
+  .hero { height: auto; min-height: 720px; }
+  .hero-content { padding-top: 140px; }
+  .hero-actions { flex-wrap: wrap; }
+  .stats-columns { grid-template-columns: 1fr; }
+  .trust-pillars { grid-template-columns: 1fr; }
+  .trust-panel { grid-column: 1; }
+  .benefits-grid { grid-template-columns: 1fr; }
+  .video-cta-title { font-size: 34px; letter-spacing: -1.36px; }
+  .email-input { width: 100%; }
+  .footer-utility { flex-direction: column; gap: 12px; align-items: flex-start; }
+}
 
 /* ---------- grain overlay ----------
    Figma: tiled noise image, node opacity .32, blend linear-burn.
