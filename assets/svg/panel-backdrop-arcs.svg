@@ -1,0 +1,14 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="468.5" height="279.906" viewBox="0 0 468.5 279.906" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="section-backdrop-arcs">
+<g id="arc-shape" filter="url(#filter0_f_0_4)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M218.364 113.626C228.601 114.622 234.25 114.622 234.25 114.622C234.25 114.622 239.899 114.622 250.136 113.626C269.807 111.904 305.761 106.819 346.644 91.8137C391.57 69.9557 423.55 43.3358 435.418 32.7092C438.753 29.723 440.5 28 440.5 28L440.5 221.22V251.906H28.0001L28 221.22L28.0001 28C28.0001 28 29.7469 29.723 33.0817 32.7092C44.9498 43.3358 76.9297 69.9557 121.855 91.8137C162.739 106.819 198.693 111.904 218.364 113.626Z" fill="#021819"/>
+</g>
+</g>
+<defs>
+<filter id="filter0_f_0_4" x="0" y="0" width="468.5" height="279.906" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="14" result="effect1_foregroundBlur_0_4"/>
+</filter>
+</defs>
+</svg>
