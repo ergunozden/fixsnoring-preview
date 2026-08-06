@@ -73,22 +73,28 @@ function buildButtons() {
 
 /* health benefits: expanding hover card, built as two halves that unfold
    from the middle crease like folded cardboard.
-   NOTE: per-benefit imagery + copy pending — sharp-memory image and the
-   designed sentence are shared by all tiles for now (Ergun 2026-08-06). */
-const BENEFIT_IMG = "assets/img/benefit-sharp-memory.png";
+   Per-benefit photos (round 10): grayscale in assets/img/benefits/, the
+   orange wash is the CSS ::after. Sharp Memory keeps its original Figma
+   asset. Shared description still pending per-benefit copy. */
 const BENEFIT_DESC =
   "Once you understand what’s happening in your sleep, the next step is choosing the treatment.";
+
+function benefitImg(label) {
+  if (label === "Sharp Memory") return "assets/img/benefit-sharp-memory.png";
+  return "assets/img/benefits/" + label.toLowerCase().replace(/\s+/g, "-") + ".jpg";
+}
 
 function buildBenefitCards() {
   document.querySelectorAll(".benefit-tile").forEach((tile) => {
     const label = tile.querySelector(".benefit-label").textContent;
+    const img = benefitImg(label);
     const card = document.createElement("div");
     card.className = "benefit-card";
     card.setAttribute("aria-hidden", "true");
     card.innerHTML =
-      '<div class="benefit-card-half benefit-card-upper" style="background-image:url(' + BENEFIT_IMG + ')">' +
+      '<div class="benefit-card-half benefit-card-upper" style="background-image:url(' + img + ')">' +
       '<span class="benefit-label">' + label + "</span></div>" +
-      '<div class="benefit-card-half benefit-card-lower" style="background-image:url(' + BENEFIT_IMG + ')">' +
+      '<div class="benefit-card-half benefit-card-lower" style="background-image:url(' + img + ')">' +
       '<span class="benefit-card-desc">' + BENEFIT_DESC + "</span></div>";
     tile.appendChild(card);
   });
@@ -290,15 +296,20 @@ function testimonialCardsIn() {
   });
 }
 
-/* benefits: each tile surfaces as it enters (the grid spans 8 rows,
-   so a single grouped stagger would finish long before the lower rows
-   are ever seen) */
+/* benefits: tiles rise in ROW pairs (round 10 — per-tile firing read as
+   a random dribble). Each grid row is one reveal unit: both tiles come
+   up together on a tight offset, snappier curve, less travel. */
 function benefitTilesIn() {
+  const rows = {};
   document.querySelectorAll(".benefit-tile").forEach((tile) => {
-    gsap.set(tile, { autoAlpha: 0, y: 20 });
-    revealOnView(tile, "-6%",
-      () => gsap.to(tile, { autoAlpha: 1, y: 0, duration: 0.7, ease: "power3.out" }),
-      (tw) => { tw.kill(); gsap.set(tile, { autoAlpha: 0, y: 20 }); });
+    const row = (tile.style.gridRow || "0").split("/")[0].trim();
+    (rows[row] = rows[row] || []).push(tile);
+  });
+  Object.values(rows).forEach((tiles) => {
+    gsap.set(tiles, { autoAlpha: 0, y: 14 });
+    revealOnView(tiles[0], "-6%",
+      () => gsap.to(tiles, { autoAlpha: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.08 }),
+      (tw) => { tw.kill(); gsap.set(tiles, { autoAlpha: 0, y: 14 }); });
   });
 }
 
@@ -337,23 +348,47 @@ function mediaTilesIn() {
    and collapse back into the tile on unhover. No gap, no thin air. */
 function benefitHovers() {
   const BAND = 0.233; // 32px per half = the 64px tile band
+  const records = [];
   document.querySelectorAll(".benefit-tile").forEach((tile) => {
     const card = tile.querySelector(".benefit-card");
     if (!card) return;
     const upper = card.querySelector(".benefit-card-upper");
     const lower = card.querySelector(".benefit-card-lower");
-    gsap.set(card, { autoAlpha: 0 });
-    gsap.set(upper, { scaleY: BAND, rotateX: -22, transformOrigin: "50% 100%", transformPerspective: 900 });
-    gsap.set(lower, { scaleY: BAND, transformOrigin: "50% 0%" });
+    const setClosed = () => {
+      gsap.set(card, { autoAlpha: 0 });
+      gsap.set(upper, { scaleY: BAND, rotateX: -22, transformOrigin: "50% 100%", transformPerspective: 900 });
+      gsap.set(lower, { scaleY: BAND, transformOrigin: "50% 0%" });
+    };
+    setClosed();
     const tl = gsap.timeline({ paused: true })
       .to(card, { autoAlpha: 1, duration: 0.08, ease: "none" }, 0)
       .to(upper, { scaleY: 1, rotateX: 0, duration: 0.38, ease: "power3.out" }, 0.02)
       .to(lower, { scaleY: 1, duration: 0.34, ease: "power3.out" }, 0.02);
+    const rec = {
+      tile,
+      // direct tile-to-tile handoff: the old card must get out of the way
+      // instantly, so it quick-fades instead of reverse-folding beside the
+      // new one (round 10 — the double fold read as lag)
+      closeFast() {
+        if (!tl.progress() && !tl.isActive()) return;
+        tl.eventCallback("onReverseComplete", null);
+        tl.pause();
+        rec.fade = gsap.to(card, {
+          autoAlpha: 0, duration: 0.16, ease: "none",
+          onComplete: () => { tl.pause(0); setClosed(); tile.style.zIndex = ""; rec.fade = null; },
+        });
+      },
+    };
+    records.push(rec);
     tile.addEventListener("mouseenter", () => {
+      records.forEach((other) => { if (other !== rec) other.closeFast(); });
+      if (rec.fade) { rec.fade.kill(); rec.fade = null; tl.pause(0); setClosed(); }
       tile.style.zIndex = 7;
+      tl.eventCallback("onReverseComplete", null);
       tl.timeScale(1).play();
     });
     tile.addEventListener("mouseleave", () => {
+      if (rec.fade) return; // already being cleared by a handoff
       tl.timeScale(1.45).reverse();
       tl.eventCallback("onReverseComplete", () => (tile.style.zIndex = ""));
     });
@@ -406,71 +441,48 @@ function faqAccordion() {
   });
 }
 
-/* sound toggle: a calm sleep drone, generated with WebAudio (no file).
-   Two soft sine "twin" tones a few Hz apart — their slow beat is the
-   calming pulse — plus a faint octave shimmer and a whisper of low-passed
-   noise as air, all breathing on an 11s swell. Replaced the raw brown
-   noise (too dirty, Ergun round 7). Tuning knobs below. */
-const SOUND_LEVEL = 0.055;  // master volume
-const DRONE_HZ = 132;       // base hum
-const DRONE_BEAT_HZ = 3;    // twin-tone offset = beats per second
-const SHIMMER_LEVEL = 0.3;  // octave partial, relative to the twins
-const AIR_LEVEL = 0.1;      // noise bed, relative to the tones
-const BREATH_S = 11;        // one in-out swell of the whole drone
+/* sound toggle: deep smooth brown noise — the airplane-cabin rumble
+   (Ergun round 10; the tone drone read as a deep beep-beep alarm, and
+   the raw round-5 noise was too dirty). Normalized brown noise through
+   a DOUBLE lowpass: the steep rolloff removes the hiss/crackle that
+   read as dirt and leaves only the smooth deep bed. Steady on purpose —
+   no swell, a cabin does not pulse. Tuning knobs below. */
+const SOUND_LEVEL = 0.12;  // master volume
+const RUMBLE_HZ = 500;     // lowpass corner x2 - lower = deeper cabin
+const NOISE_SECONDS = 6;   // loop length, long enough to hide the seam
 
 function soundToggle() {
   const btn = document.getElementById("sound-toggle");
   if (!btn) return;
   let ctx = null;
   let gain = null;
-  function startDrone() {
+  function startBrownNoise() {
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     gain = ctx.createGain();
     gain.gain.value = 0;
     gain.connect(ctx.destination);
 
-    // everything feeds this bed, whose level breathes slowly
-    const bed = ctx.createGain();
-    bed.gain.value = 0.8;
-    bed.connect(gain);
-    const breath = ctx.createOscillator();
-    breath.frequency.value = 1 / BREATH_S;
-    const breathDepth = ctx.createGain();
-    breathDepth.gain.value = 0.18;
-    breath.connect(breathDepth).connect(bed.gain);
-    breath.start();
-
-    // twin tones + octave shimmer
-    [[DRONE_HZ, 1], [DRONE_HZ + DRONE_BEAT_HZ, 1], [DRONE_HZ * 2, SHIMMER_LEVEL]]
-      .forEach(([hz, level]) => {
-        const osc = ctx.createOscillator();
-        osc.type = "sine";
-        osc.frequency.value = hz;
-        const g = ctx.createGain();
-        g.gain.value = level * 0.33; // three sources share the headroom
-        osc.connect(g).connect(bed);
-        osc.start();
-      });
-
-    // air: soft noise low-passed to a distant hush
-    const len = ctx.sampleRate * 4;
+    const len = ctx.sampleRate * NOISE_SECONDS;
     const buf = ctx.createBuffer(1, len, ctx.sampleRate);
     const data = buf.getChannelData(0);
     let last = 0;
+    let peak = 0;
     for (let i = 0; i < len; i++) {
       const white = Math.random() * 2 - 1;
       last = (last + 0.02 * white) / 1.02;
-      data[i] = last * 3.5;
+      data[i] = last;
+      if (Math.abs(last) > peak) peak = Math.abs(last);
     }
+    for (let i = 0; i < len; i++) data[i] *= 0.9 / peak; // predictable level
+
     const src = ctx.createBufferSource();
     src.buffer = buf;
     src.loop = true;
-    const lp = ctx.createBiquadFilter();
-    lp.type = "lowpass";
-    lp.frequency.value = 400;
-    const airGain = ctx.createGain();
-    airGain.gain.value = AIR_LEVEL;
-    src.connect(lp).connect(airGain).connect(bed);
+    const lp1 = ctx.createBiquadFilter();
+    const lp2 = ctx.createBiquadFilter();
+    lp1.type = lp2.type = "lowpass";
+    lp1.frequency.value = lp2.frequency.value = RUMBLE_HZ;
+    src.connect(lp1).connect(lp2).connect(gain);
     src.start();
   }
   btn.addEventListener("click", () => {
@@ -478,7 +490,7 @@ function soundToggle() {
     btn.setAttribute("aria-pressed", String(on));
     btn.setAttribute("aria-label", on ? "Turn sound off" : "Turn sound on");
     if (on) {
-      if (!ctx) startDrone();
+      if (!ctx) startBrownNoise();
       ctx.resume();
       gain.gain.cancelScheduledValues(ctx.currentTime);
       gain.gain.setTargetAtTime(SOUND_LEVEL, ctx.currentTime, 0.5); // sleepy fade in
