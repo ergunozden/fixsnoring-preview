@@ -943,8 +943,10 @@ i { font-style: normal; }
   width: 46px;
   height: 46px;
   border-radius: 999px;
-  background: #e5e5e5;
+  background: #e5e5e5; /* shows until the portrait loads */
   flex-shrink: 0;
+  display: block;
+  object-fit: cover;
 }
 .author-info {
   display: flex;
@@ -1226,7 +1228,8 @@ i { font-style: normal; }
   overflow: hidden;
   height: 0;
 }
-.faq-item.is-open .faq-answer { height: auto; }
+/* answer height is animated inline by faqAccordion() — a class-based
+   height:auto here would snap open before the tween runs (first-click jump) */
 .faq-answer-inner {
   display: block;
   padding-top: 20px;
@@ -1485,7 +1488,8 @@ i { font-style: normal; }
 /* ---------- grain overlay ----------
    Figma: tiled noise image, node opacity .32, blend linear-burn (multiply is
    the closest CSS match). Motion: the Behoove film-grain mechanism - a fixed
-   overlay whose oversized inner layer jumps position on stepped keyframes. */
+   overlay whose oversized inner layer jumps position on stepped keyframes.
+   Opacity dialed down from the Figma .32 by ~35% (Ergun round 7). */
 .grain-overlay {
   position: fixed;
   inset: 0;
@@ -1493,7 +1497,7 @@ i { font-style: normal; }
   z-index: 999;
   overflow: hidden;
   pointer-events: none;
-  opacity: 0.32;
+  opacity: 0.21;
   mix-blend-mode: multiply;
 }
 .grain-overlay-inner {

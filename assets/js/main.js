@@ -132,40 +132,56 @@ function arcTimeline(svgSel) {
 function scrollArc(svgSel, clipSel) {
   const tl = arcTimeline(svgSel);
   if (!tl) return;
-  ScrollTrigger.create({
-    trigger: clipSel,
-    start: "top 88%",
-    once: true,
-    onEnter: () => tl.play(),
-  });
+  revealOnView(clipSel, "top 88%", () => tl.play(0), () => tl.pause(0));
 }
 
 /* ============================================================
-   Reveal system — everything is pre-hidden at init, plays on enter
+   Reveal system — everything is pre-hidden at init and plays when
+   its trigger is actually on screen. If the user scrolls past
+   faster than the animation can finish, the reveal resets and
+   plays again the next time the trigger enters the viewport
+   (from either direction) — nobody lands on a finished reveal.
    ============================================================ */
 const wipeTargets = [];
+
+function revealOnView(trigger, start, play, reset) {
+  let done = false;
+  let anim = null;
+  const enter = () => {
+    if (done || anim) return;
+    anim = play();
+    anim.eventCallback("onComplete", () => { done = true; });
+  };
+  const leave = () => {
+    if (done || !anim) return;
+    reset(anim);
+    anim = null;
+  };
+  ScrollTrigger.create({
+    trigger,
+    start,
+    end: "bottom top",
+    onEnter: enter,
+    onEnterBack: enter,
+    onLeave: leave,
+    onLeaveBack: leave,
+  });
+}
 
 function prepReveals() {
   document.querySelectorAll("[data-wipe]").forEach((el) => {
     const split = SplitText.create(el, { type: "lines", mask: "lines", autoSplit: true });
     gsap.set(split.lines, { yPercent: 110 });
     wipeTargets.push({ el, split });
-    ScrollTrigger.create({
-      trigger: el,
-      start: "top 92%",
-      once: true,
-      onEnter: () =>
-        gsap.to(split.lines, { yPercent: 0, duration: 0.9, stagger: 0.09, ease: "power3.out" }),
-    });
+    revealOnView(el, "top 92%",
+      () => gsap.to(split.lines, { yPercent: 0, duration: 0.9, stagger: 0.09, ease: "power3.out" }),
+      (tw) => { tw.kill(); gsap.set(split.lines, { yPercent: 110 }); });
   });
   document.querySelectorAll("[data-fade]").forEach((el) => {
     gsap.set(el, { autoAlpha: 0, y: 16 });
-    ScrollTrigger.create({
-      trigger: el,
-      start: "top 94%",
-      once: true,
-      onEnter: () => gsap.to(el, { autoAlpha: 1, y: 0, duration: 0.8, ease: "power2.out" }),
-    });
+    revealOnView(el, "top 94%",
+      () => gsap.to(el, { autoAlpha: 1, y: 0, duration: 0.8, ease: "power2.out" }),
+      (tw) => { tw.kill(); gsap.set(el, { autoAlpha: 0, y: 16 }); });
   });
 }
 
@@ -196,9 +212,7 @@ function statsSequence() {
     gsap.set(bar, { scaleY: s0, transformOrigin: "50% 100%" });
     gsap.set(col.querySelector(".stat-block"), { y: bar.offsetHeight * (1 - s0) });
   });
-  const tl = gsap.timeline({
-    scrollTrigger: { trigger: ".stats-columns", start: "top 88%", once: true },
-  });
+  const tl = gsap.timeline({ paused: true });
   cols.forEach((col, i) => {
     const bar = col.querySelector(".stat-line-inner");
     const block = col.querySelector(".stat-block");
@@ -211,40 +225,33 @@ function statsSequence() {
         { innerText: +num.dataset.target, duration: 1.9, snap: { innerText: 1 }, ease: "power2.inOut" }, at);
     }
   });
+  revealOnView(".stats-columns", "top 88%", () => tl.play(0), () => tl.pause(0));
 }
 
 /* symptoms cards entrance */
 function symptomCardsIn() {
   const slots = gsap.utils.toArray(".symptom-card-slot");
   gsap.set(slots, { autoAlpha: 0, y: 30 });
-  ScrollTrigger.create({
-    trigger: ".symptoms-cards",
-    start: "top 88%",
-    once: true,
-    onEnter: () => gsap.to(slots, { autoAlpha: 1, y: 0, duration: 0.9, ease: "power3.out", stagger: 0.1 }),
-  });
+  revealOnView(".symptoms-cards", "top 88%",
+    () => gsap.to(slots, { autoAlpha: 1, y: 0, duration: 0.9, ease: "power3.out", stagger: 0.1 }),
+    (tw) => { tw.kill(); gsap.set(slots, { autoAlpha: 0, y: 30 }); });
 }
 
 /* night data viz: bars grow up quickly, chips pop in */
 function nightVizIn() {
-  const bars = () => gsap.utils.toArray(".wave-bar");
-  gsap.set(bars(), { scaleY: 0, transformOrigin: "50% 100%" });
+  const bars = gsap.utils.toArray(".wave-bar");
+  gsap.set(bars, { scaleY: 0, transformOrigin: "50% 100%" });
   const chips = gsap.utils.toArray(".glass-stat-card, .event-chip, .chip-connector");
   gsap.set(chips, { autoAlpha: 0, y: 12 });
-  ScrollTrigger.create({
-    trigger: ".night-data-viz",
-    start: "top 85%",
-    once: true,
-    onEnter: () => {
-      gsap.to(bars(), { scaleY: 1, duration: 0.5, ease: "power2.out", stagger: { each: 0.006 } });
-      gsap.to(chips, { autoAlpha: 1, y: 0, duration: 0.6, ease: "power2.out", stagger: 0.1, delay: 0.35 });
-    },
-  });
+  const tl = gsap.timeline({ paused: true })
+    .to(bars, { scaleY: 1, duration: 0.5, ease: "power2.out", stagger: { each: 0.006 } }, 0)
+    .to(chips, { autoAlpha: 1, y: 0, duration: 0.6, ease: "power2.out", stagger: 0.1 }, 0.35);
+  revealOnView(".night-data-viz", "top 85%", () => tl.play(0), () => tl.pause(0));
 }
 
 /* testimonials: the two columns drift at different speeds over the sticky
    title — left column slower, right column faster */
-const TESTIMONIAL_COL_SPEEDS = { left: 55, right: 140 }; // px of drift per column
+const TESTIMONIAL_COL_SPEEDS = { left: 80, right: 300 }; // px of drift per column
 function testimonialsParallax() {
   document.querySelectorAll(".testimonial-card").forEach((card) => {
     const isLeft = (card.style.gridColumn || "").trim().startsWith("1");
@@ -301,6 +308,10 @@ function faqAccordion() {
     if (!reducedMotion) {
       item._split = SplitText.create(inner, { type: "lines", autoSplit: true });
     }
+    // GSAP owns the height inline from the start. A class-based height:auto
+    // would snap open before the tween runs — the first-click jump.
+    gsap.set(item.querySelector(".faq-answer"),
+      { height: item.classList.contains("is-open") ? "auto" : 0 });
   });
   items.forEach((item) => {
     const head = item.querySelector(".faq-item-head");
@@ -333,17 +344,53 @@ function faqAccordion() {
   });
 }
 
-/* sound toggle: brown noise for the sleepy structure. Generated with
-   WebAudio (no file). Click = slash disappears + noise fades in softly;
-   click again = fades out. Volume knob: NOISE_LEVEL. */
-const NOISE_LEVEL = 0.06;
+/* sound toggle: a calm sleep drone, generated with WebAudio (no file).
+   Two soft sine "twin" tones a few Hz apart — their slow beat is the
+   calming pulse — plus a faint octave shimmer and a whisper of low-passed
+   noise as air, all breathing on an 11s swell. Replaced the raw brown
+   noise (too dirty, Ergun round 7). Tuning knobs below. */
+const SOUND_LEVEL = 0.055;  // master volume
+const DRONE_HZ = 132;       // base hum
+const DRONE_BEAT_HZ = 3;    // twin-tone offset = beats per second
+const SHIMMER_LEVEL = 0.3;  // octave partial, relative to the twins
+const AIR_LEVEL = 0.18;     // noise bed, relative to the tones
+const BREATH_S = 11;        // one in-out swell of the whole drone
+
 function soundToggle() {
   const btn = document.getElementById("sound-toggle");
   if (!btn) return;
   let ctx = null;
   let gain = null;
-  function startBrownNoise() {
+  function startDrone() {
     ctx = new (window.AudioContext || window.webkitAudioContext)();
+    gain = ctx.createGain();
+    gain.gain.value = 0;
+    gain.connect(ctx.destination);
+
+    // everything feeds this bed, whose level breathes slowly
+    const bed = ctx.createGain();
+    bed.gain.value = 0.8;
+    bed.connect(gain);
+    const breath = ctx.createOscillator();
+    breath.frequency.value = 1 / BREATH_S;
+    const breathDepth = ctx.createGain();
+    breathDepth.gain.value = 0.18;
+    breath.connect(breathDepth).connect(bed.gain);
+    breath.start();
+
+    // twin tones + octave shimmer
+    [[DRONE_HZ, 1], [DRONE_HZ + DRONE_BEAT_HZ, 1], [DRONE_HZ * 2, SHIMMER_LEVEL]]
+      .forEach(([hz, level]) => {
+        const osc = ctx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.value = hz;
+        const g = ctx.createGain();
+        g.gain.value = level * 0.33; // three sources share the headroom
+        osc.connect(g).connect(bed);
+        osc.start();
+      });
+
+    // air: soft noise low-passed to a distant hush
     const len = ctx.sampleRate * 4;
     const buf = ctx.createBuffer(1, len, ctx.sampleRate);
     const data = buf.getChannelData(0);
@@ -356,9 +403,12 @@ function soundToggle() {
     const src = ctx.createBufferSource();
     src.buffer = buf;
     src.loop = true;
-    gain = ctx.createGain();
-    gain.gain.value = 0;
-    src.connect(gain).connect(ctx.destination);
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 400;
+    const airGain = ctx.createGain();
+    airGain.gain.value = AIR_LEVEL;
+    src.connect(lp).connect(airGain).connect(bed);
     src.start();
   }
   btn.addEventListener("click", () => {
@@ -366,10 +416,10 @@ function soundToggle() {
     btn.setAttribute("aria-pressed", String(on));
     btn.setAttribute("aria-label", on ? "Turn sound off" : "Turn sound on");
     if (on) {
-      if (!ctx) startBrownNoise();
+      if (!ctx) startDrone();
       ctx.resume();
       gain.gain.cancelScheduledValues(ctx.currentTime);
-      gain.gain.setTargetAtTime(NOISE_LEVEL, ctx.currentTime, 0.5); // sleepy fade in
+      gain.gain.setTargetAtTime(SOUND_LEVEL, ctx.currentTime, 0.5); // sleepy fade in
     } else if (gain) {
       gain.gain.cancelScheduledValues(ctx.currentTime);
       gain.gain.setTargetAtTime(0, ctx.currentTime, 0.35);
@@ -382,12 +432,9 @@ function footerReveal() {
   scrollArc(".footer-arc-clip .section-arcs-svg", ".footer-arc-clip");
   const rows = gsap.utils.toArray(".footer-container > *");
   gsap.set(rows, { autoAlpha: 0, y: 16 });
-  ScrollTrigger.create({
-    trigger: ".footer",
-    start: "top 85%",
-    once: true,
-    onEnter: () => gsap.to(rows, { autoAlpha: 1, y: 0, duration: 0.55, ease: "power2.out", stagger: 0.06 }),
-  });
+  revealOnView(".footer", "top 85%",
+    () => gsap.to(rows, { autoAlpha: 1, y: 0, duration: 0.55, ease: "power2.out", stagger: 0.06 }),
+    (tw) => { tw.kill(); gsap.set(rows, { autoAlpha: 0, y: 16 }); });
 }
 
 /* ============================================================
