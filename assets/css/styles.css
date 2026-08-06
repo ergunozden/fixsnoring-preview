@@ -1486,41 +1486,47 @@ i { font-style: normal; }
 }
 
 /* ---------- grain overlay ----------
-   The Behoove grain, verbatim (Ergun round 8): same 256px transparent noise
-   tile, opacity 1, no blend - the alpha is baked into the texture. The
-   FixSnoring 1000px jpg tile + multiply read too coarse and dirty. */
-.grain-overlay {
+   Behoove's real production grain (Ergun, round 9): CRT static, dual layer -
+   a multiply layer and a screen layer of the same 192px tile, jittering via
+   stepped background-position. Values are verbatim from the Behoove snippet;
+   only the texture URL is localized into the repo. */
+.grain-overlay,
+.grain-overlay-b {
   position: fixed;
   inset: 0;
-  height: 100vh;
-  z-index: 999;
-  overflow: hidden;
   pointer-events: none;
-  opacity: 1;
-}
-.grain-overlay-inner {
-  position: absolute;
-  inset: -200%;
-  width: 400%;
-  height: 400%;
   background-image: url("../img/behoove-grain.png");
+  background-size: 192px 192px;
   background-repeat: repeat;
-  background-size: 256px 256px;
-  animation: grain-move 8s steps(10, start) infinite;
+  image-rendering: pixelated;
+  animation: grain-static 1s steps(20) infinite;
 }
-@keyframes grain-move {
-  0%   { transform: translate(0%, 0%); }
-  10%  { transform: translate(-5%, -10%); }
-  20%  { transform: translate(-15%, 5%); }
-  30%  { transform: translate(7%, -25%); }
-  40%  { transform: translate(-5%, 25%); }
-  50%  { transform: translate(-15%, 10%); }
-  60%  { transform: translate(15%, 0%); }
-  70%  { transform: translate(0%, 15%); }
-  80%  { transform: translate(3%, 35%); }
-  90%  { transform: translate(-10%, 10%); }
-  100% { transform: translate(0%, 0%); }
+.grain-overlay   { z-index: 9998; opacity: 0.06; mix-blend-mode: multiply; }
+.grain-overlay-b { z-index: 9999; opacity: 0.08; mix-blend-mode: screen; animation-delay: -0.3s; }
+
+@keyframes grain-static {
+  0%   { background-position:   0px    0px; }
+  5%   { background-position:  41px  -83px; }
+  10%  { background-position: -71px   33px; }
+  15%  { background-position:  19px  127px; }
+  20%  { background-position: -53px  -47px; }
+  25%  { background-position: 101px   17px; }
+  30%  { background-position: -29px  -91px; }
+  35%  { background-position:  73px   59px; }
+  40%  { background-position:-113px   41px; }
+  45%  { background-position:  31px  -67px; }
+  50%  { background-position: -83px  103px; }
+  55%  { background-position:  47px  -23px; }
+  60%  { background-position: -19px   89px; }
+  65%  { background-position: 109px  -53px; }
+  70%  { background-position: -41px   71px; }
+  75%  { background-position:  67px -101px; }
+  80%  { background-position: -97px   13px; }
+  85%  { background-position:  23px  -79px; }
+  90%  { background-position: -61px   97px; }
+  95%  { background-position:  89px  -37px; }
+  100% { background-position:   0px    0px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .grain-overlay-inner { animation: none; }
+  .grain-overlay, .grain-overlay-b { animation: none; }
 }
