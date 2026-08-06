@@ -204,11 +204,11 @@ function statsSequence() {
     const block = col.querySelector(".stat-block");
     const num = col.querySelector(".stat-num");
     const at = i * 0.32; // tighter stagger so fast scrollers aren't left waiting
-    tl.to(bar, { scaleY: 1, duration: 1.9, ease: "back.out(1.15)" }, at);   // springy settle
-    tl.to(block, { y: 0, duration: 1.9, ease: "back.out(1.15)" }, at);      // rides the bar top
+    tl.to(bar, { scaleY: 1, duration: 1.9, ease: "power2.inOut" }, at);   // smooth in and out, no bounce
+    tl.to(block, { y: 0, duration: 1.9, ease: "power2.inOut" }, at);      // rides the bar top
     if (num) {
       tl.fromTo(num, { innerText: 0 },
-        { innerText: +num.dataset.target, duration: 1.9, snap: { innerText: 1 }, ease: "power2.out" }, at);
+        { innerText: +num.dataset.target, duration: 1.9, snap: { innerText: 1 }, ease: "power2.inOut" }, at);
     }
   });
 }
@@ -333,6 +333,50 @@ function faqAccordion() {
   });
 }
 
+/* sound toggle: brown noise for the sleepy structure. Generated with
+   WebAudio (no file). Click = slash disappears + noise fades in softly;
+   click again = fades out. Volume knob: NOISE_LEVEL. */
+const NOISE_LEVEL = 0.06;
+function soundToggle() {
+  const btn = document.getElementById("sound-toggle");
+  if (!btn) return;
+  let ctx = null;
+  let gain = null;
+  function startBrownNoise() {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const len = ctx.sampleRate * 4;
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < len; i++) {
+      const white = Math.random() * 2 - 1;
+      last = (last + 0.02 * white) / 1.02;
+      data[i] = last * 3.5;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    gain = ctx.createGain();
+    gain.gain.value = 0;
+    src.connect(gain).connect(ctx.destination);
+    src.start();
+  }
+  btn.addEventListener("click", () => {
+    const on = btn.classList.toggle("is-sound-on");
+    btn.setAttribute("aria-pressed", String(on));
+    btn.setAttribute("aria-label", on ? "Turn sound off" : "Turn sound on");
+    if (on) {
+      if (!ctx) startBrownNoise();
+      ctx.resume();
+      gain.gain.cancelScheduledValues(ctx.currentTime);
+      gain.gain.setTargetAtTime(NOISE_LEVEL, ctx.currentTime, 0.5); // sleepy fade in
+    } else if (gain) {
+      gain.gain.cancelScheduledValues(ctx.currentTime);
+      gain.gain.setTargetAtTime(0, ctx.currentTime, 0.35);
+    }
+  });
+}
+
 /* footer: quick staggered reveal — never make the user wait */
 function footerReveal() {
   scrollArc(".footer-arc-clip .section-arcs-svg", ".footer-arc-clip");
@@ -355,6 +399,7 @@ buildBenefitCards();
 buildStatCounters();
 
 document.fonts.ready.then(() => {
+  soundToggle();
   if (reducedMotion) {
     gsap.set(".backdrop-arcs", { visibility: "visible" });
     faqAccordion();

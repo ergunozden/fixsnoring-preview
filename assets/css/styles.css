@@ -110,9 +110,15 @@ i { font-style: normal; }
 }
 .btn .btn-label { position: relative; z-index: 2; display: inline-block; }
 .btn-primary { background: var(--c-orange); --fill-color: #fff; --fill-text: var(--c-dark); }
-.btn-glass { background: rgba(255, 255, 255, 0.12); --fill-color: var(--c-orange); --fill-text: #fff; }
+.btn-glass { background: rgba(255, 255, 255, 0.12); --fill-color: #fff; --fill-text: var(--c-ink); }
 .btn-icon { width: 40px; padding: 0; }
 .btn-icon img { position: relative; z-index: 2; }
+.sound-icon { position: relative; z-index: 2; display: block; }
+.sound-icon .icon-slash {
+  transition: opacity 0.25s ease;
+  transform-origin: 50% 50%;
+}
+.btn.is-sound-on .icon-slash { opacity: 0; }
 
 /* playful CTA hover: label slides up + circle fill grows from bottom center.
    Tune per variant via --fill-color / --fill-text. JS sizes --fill-d. */
