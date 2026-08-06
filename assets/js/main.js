@@ -132,7 +132,7 @@ function arcTimeline(svgSel) {
 function scrollArc(svgSel, clipSel) {
   const tl = arcTimeline(svgSel);
   if (!tl) return;
-  revealOnView(clipSel, "top 88%", () => tl.play(0), () => tl.pause(0));
+  revealOnView(clipSel, "-12%", () => tl.play(0), () => tl.pause(0));
 }
 
 /* ============================================================
@@ -144,28 +144,29 @@ function scrollArc(svgSel, clipSel) {
    ============================================================ */
 const wipeTargets = [];
 
-function revealOnView(trigger, start, play, reset) {
+/* IntersectionObserver, not ScrollTrigger: reveals key off the element's
+   REAL rendered position, so late reflows can never leave a reveal firing
+   early or late. enterMargin mirrors the old "top N%" starts — "-8%" means
+   the element's top must clear the bottom 8% of the viewport. */
+function revealOnView(trigger, enterMargin, play, reset) {
+  const el = typeof trigger === "string" ? document.querySelector(trigger) : trigger;
+  if (!el) return;
   let done = false;
   let anim = null;
-  const enter = () => {
-    if (done || anim) return;
-    anim = play();
-    anim.eventCallback("onComplete", () => { done = true; });
-  };
-  const leave = () => {
-    if (done || !anim) return;
-    reset(anim);
-    anim = null;
-  };
-  ScrollTrigger.create({
-    trigger,
-    start,
-    end: "bottom top",
-    onEnter: enter,
-    onEnterBack: enter,
-    onLeave: leave,
-    onLeaveBack: leave,
-  });
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (done) return;
+      if (entry.isIntersecting) {
+        if (anim) return;
+        anim = play();
+        anim.eventCallback("onComplete", () => { done = true; io.disconnect(); });
+      } else if (anim) {
+        reset(anim);
+        anim = null;
+      }
+    });
+  }, { rootMargin: "0px 0px " + enterMargin + " 0px" });
+  io.observe(el);
 }
 
 function prepReveals() {
@@ -173,13 +174,13 @@ function prepReveals() {
     const split = SplitText.create(el, { type: "lines", mask: "lines", autoSplit: true });
     gsap.set(split.lines, { yPercent: 110 });
     wipeTargets.push({ el, split });
-    revealOnView(el, "top 92%",
+    revealOnView(el, "-8%",
       () => gsap.to(split.lines, { yPercent: 0, duration: 0.9, stagger: 0.09, ease: "power3.out" }),
       (tw) => { tw.kill(); gsap.set(split.lines, { yPercent: 110 }); });
   });
   document.querySelectorAll("[data-fade]").forEach((el) => {
     gsap.set(el, { autoAlpha: 0, y: 16 });
-    revealOnView(el, "top 94%",
+    revealOnView(el, "-6%",
       () => gsap.to(el, { autoAlpha: 1, y: 0, duration: 0.8, ease: "power2.out" }),
       (tw) => { tw.kill(); gsap.set(el, { autoAlpha: 0, y: 16 }); });
   });
@@ -225,14 +226,14 @@ function statsSequence() {
         { innerText: +num.dataset.target, duration: 1.9, snap: { innerText: 1 }, ease: "power2.inOut" }, at);
     }
   });
-  revealOnView(".stats-columns", "top 88%", () => tl.play(0), () => tl.pause(0));
+  revealOnView(".stats-columns", "-12%", () => tl.play(0), () => tl.pause(0));
 }
 
 /* symptoms cards entrance */
 function symptomCardsIn() {
   const slots = gsap.utils.toArray(".symptom-card-slot");
   gsap.set(slots, { autoAlpha: 0, y: 30 });
-  revealOnView(".symptoms-cards", "top 88%",
+  revealOnView(".symptoms-cards", "-12%",
     () => gsap.to(slots, { autoAlpha: 1, y: 0, duration: 0.9, ease: "power3.out", stagger: 0.1 }),
     (tw) => { tw.kill(); gsap.set(slots, { autoAlpha: 0, y: 30 }); });
 }
@@ -246,7 +247,7 @@ function nightVizIn() {
   const tl = gsap.timeline({ paused: true })
     .to(bars, { scaleY: 1, duration: 0.5, ease: "power2.out", stagger: { each: 0.006 } }, 0)
     .to(chips, { autoAlpha: 1, y: 0, duration: 0.6, ease: "power2.out", stagger: 0.1 }, 0.35);
-  revealOnView(".night-data-viz", "top 85%", () => tl.play(0), () => tl.pause(0));
+  revealOnView(".night-data-viz", "-15%", () => tl.play(0), () => tl.pause(0));
 }
 
 /* testimonials: the two columns drift at different speeds over the sticky
@@ -266,6 +267,67 @@ function testimonialsParallax() {
         scrub: true,
       },
     });
+  });
+}
+
+/* trust: the coach panel and the four pillars rise in together */
+function trustPillarsIn() {
+  const items = gsap.utils.toArray(".trust-panel, .trust-pillar");
+  gsap.set(items, { autoAlpha: 0, y: 24 });
+  revealOnView(".trust-pillars", "-15%",
+    () => gsap.to(items, { autoAlpha: 1, y: 0, duration: 0.9, ease: "power3.out", stagger: 0.09 }),
+    (tw) => { tw.kill(); gsap.set(items, { autoAlpha: 0, y: 24 }); });
+}
+
+/* testimonials: each card fades in where it stands — opacity only,
+   the parallax scrub owns the y axis */
+function testimonialCardsIn() {
+  document.querySelectorAll(".testimonial-card").forEach((card) => {
+    gsap.set(card, { autoAlpha: 0 });
+    revealOnView(card, "-8%",
+      () => gsap.to(card, { autoAlpha: 1, duration: 0.9, ease: "power2.out" }),
+      (tw) => { tw.kill(); gsap.set(card, { autoAlpha: 0 }); });
+  });
+}
+
+/* benefits: each tile surfaces as it enters (the grid spans 8 rows,
+   so a single grouped stagger would finish long before the lower rows
+   are ever seen) */
+function benefitTilesIn() {
+  document.querySelectorAll(".benefit-tile").forEach((tile) => {
+    gsap.set(tile, { autoAlpha: 0, y: 20 });
+    revealOnView(tile, "-6%",
+      () => gsap.to(tile, { autoAlpha: 1, y: 0, duration: 0.7, ease: "power3.out" }),
+      (tw) => { tw.kill(); gsap.set(tile, { autoAlpha: 0, y: 20 }); });
+  });
+}
+
+/* faq: each row rises in as it enters */
+function faqItemsIn() {
+  document.querySelectorAll(".faq-item").forEach((item) => {
+    gsap.set(item, { autoAlpha: 0, y: 16 });
+    revealOnView(item, "-6%",
+      () => gsap.to(item, { autoAlpha: 1, y: 0, duration: 0.7, ease: "power2.out" }),
+      (tw) => { tw.kill(); gsap.set(item, { autoAlpha: 0, y: 16 }); });
+  });
+}
+
+/* video ctas + product tiles: the imagery fades up underneath the
+   text reveals those blocks already have */
+function mediaTilesIn() {
+  document.querySelectorAll(".video-cta").forEach((tile) => {
+    const media = tile.querySelectorAll(".video-cta-video, .video-cta-overlay");
+    if (!media.length) return;
+    gsap.set(media, { autoAlpha: 0 });
+    revealOnView(tile, "-15%",
+      () => gsap.to(media, { autoAlpha: 1, duration: 1.0, ease: "power2.out" }),
+      (tw) => { tw.kill(); gsap.set(media, { autoAlpha: 0 }); });
+  });
+  document.querySelectorAll(".product-tile-img").forEach((img) => {
+    gsap.set(img, { autoAlpha: 0, scale: 1.04 });
+    revealOnView(img, "-10%",
+      () => gsap.to(img, { autoAlpha: 1, scale: 1, duration: 1.1, ease: "power2.out" }),
+      (tw) => { tw.kill(); gsap.set(img, { autoAlpha: 0, scale: 1.04 }); });
   });
 }
 
@@ -353,7 +415,7 @@ const SOUND_LEVEL = 0.055;  // master volume
 const DRONE_HZ = 132;       // base hum
 const DRONE_BEAT_HZ = 3;    // twin-tone offset = beats per second
 const SHIMMER_LEVEL = 0.3;  // octave partial, relative to the twins
-const AIR_LEVEL = 0.18;     // noise bed, relative to the tones
+const AIR_LEVEL = 0.1;      // noise bed, relative to the tones
 const BREATH_S = 11;        // one in-out swell of the whole drone
 
 function soundToggle() {
@@ -432,7 +494,7 @@ function footerReveal() {
   scrollArc(".footer-arc-clip .section-arcs-svg", ".footer-arc-clip");
   const rows = gsap.utils.toArray(".footer-container > *");
   gsap.set(rows, { autoAlpha: 0, y: 16 });
-  revealOnView(".footer", "top 85%",
+  revealOnView(".footer", "-15%",
     () => gsap.to(rows, { autoAlpha: 1, y: 0, duration: 0.55, ease: "power2.out", stagger: 0.06 }),
     (tw) => { tw.kill(); gsap.set(rows, { autoAlpha: 0, y: 16 }); });
 }
@@ -459,9 +521,27 @@ document.fonts.ready.then(() => {
   statsSequence();
   symptomCardsIn();
   nightVizIn();
+  trustPillarsIn();
   testimonialsParallax();
+  testimonialCardsIn();
+  benefitTilesIn();
+  mediaTilesIn();
+  faqItemsIn();
   benefitHovers();
   faqAccordion();
   footerReveal();
   ScrollTrigger.refresh();
+
+  // the page keeps reflowing a little after init (late media, async
+  // SplitText re-splits) which leaves trigger positions stale — watch the
+  // body height and recompute once things go quiet
+  const settleRefresh = gsap.delayedCall(0.35, () => ScrollTrigger.refresh()).pause();
+  let lastBodyH = document.body.scrollHeight;
+  new ResizeObserver(() => {
+    if (Math.abs(document.body.scrollHeight - lastBodyH) > 2) {
+      lastBodyH = document.body.scrollHeight;
+      settleRefresh.restart(true);
+    }
+  }).observe(document.body);
+  window.addEventListener("load", () => settleRefresh.restart(true));
 });
