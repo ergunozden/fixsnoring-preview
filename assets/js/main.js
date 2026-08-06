@@ -75,9 +75,29 @@ function buildButtons() {
    from the middle crease like folded cardboard.
    Per-benefit photos (round 10): grayscale in assets/img/benefits/, the
    orange wash is the CSS ::after. Sharp Memory keeps its original Figma
-   asset. Shared description still pending per-benefit copy. */
+   asset.
+   Per-benefit descriptions (round 11): Claude draft - Gemini pass pending
+   (Gemini key unavailable); verify before production. */
 const BENEFIT_DESC =
   "Once you understand what’s happening in your sleep, the next step is choosing the treatment.";
+const BENEFIT_DESCS = {
+  "Heart Health": "Deep sleep lowers blood pressure and gives your heart the nightly rest it needs.",
+  "Muscle Growth": "Growth hormone peaks during deep sleep, when your muscles do their real building.",
+  "Tissue Repair": "Your body repairs skin, muscle and tissue while you sleep, cell by cell.",
+  "Physical Recovery": "A full night of sleep is when soreness fades and your energy stores refill.",
+  "Immune Support": "Consistent sleep strengthens the immune responses that keep you from getting sick.",
+  "Disease Resistance": "Well-rested bodies fight off infection and inflammation far more effectively.",
+  "Better Focus": "One good night sharpens attention. A week of them transforms it.",
+  "Sharp Memory": "Sleep is when the brain files the day away, turning moments into lasting memory.",
+  "Brain Health": "Overnight, your brain clears the waste that builds up during waking hours.",
+  "Mental Clarity": "Rested minds think in straight lines. Fog is a symptom, not a personality.",
+  "Problem Solving": "Sleep reorganizes what you learned, so solutions surface that were not there yesterday.",
+  "Stress Relief": "Sleep resets cortisol, the stress hormone, so pressure feels lighter by morning.",
+  "Mood Regulation": "The difference between a short fuse and a good day often starts the night before.",
+  "Lower Anxiety": "A rested brain keeps worry in proportion. Sleep is its nightly maintenance.",
+  "Emotional Balance": "REM sleep processes the day's emotions, so you wake steadier than you went to bed.",
+  "Hormonal Balance": "From appetite to energy, the hormones that run your day are tuned while you sleep.",
+};
 
 function benefitImg(label) {
   if (label === "Sharp Memory") return "assets/img/benefit-sharp-memory.png";
@@ -88,6 +108,7 @@ function buildBenefitCards() {
   document.querySelectorAll(".benefit-tile").forEach((tile) => {
     const label = tile.querySelector(".benefit-label").textContent;
     const img = benefitImg(label);
+    const desc = BENEFIT_DESCS[label] || BENEFIT_DESC;
     const card = document.createElement("div");
     card.className = "benefit-card";
     card.setAttribute("aria-hidden", "true");
@@ -95,7 +116,7 @@ function buildBenefitCards() {
       '<div class="benefit-card-half benefit-card-upper" style="background-image:url(' + img + ')">' +
       '<span class="benefit-label">' + label + "</span></div>" +
       '<div class="benefit-card-half benefit-card-lower" style="background-image:url(' + img + ')">' +
-      '<span class="benefit-card-desc">' + BENEFIT_DESC + "</span></div>";
+      '<span class="benefit-card-desc">' + desc + "</span></div>";
     tile.appendChild(card);
   });
 }
@@ -373,6 +394,9 @@ function benefitHovers() {
         if (!tl.progress() && !tl.isActive()) return;
         tl.eventCallback("onReverseComplete", null);
         tl.pause();
+        // drop UNDER the incoming card right away — clearing z-index only
+        // after the fade made the stack reorder visibly (round 11 flash)
+        tile.style.zIndex = 6;
         rec.fade = gsap.to(card, {
           autoAlpha: 0, duration: 0.16, ease: "none",
           onComplete: () => { tl.pause(0); setClosed(); tile.style.zIndex = ""; rec.fade = null; },
